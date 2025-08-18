@@ -7,32 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A1234567890123456789012A /* AIChatBotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789012B /* AIChatBotApp.swift */; };
-		A1234567890123456789012C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789012D /* ContentView.swift */; };
-		A1234567890123456789012E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789012F /* Assets.xcassets */; };
-		A1234567890123456789013A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789013B /* Preview Assets.xcassets */; };
-		A1234567890123456789013C /* CarPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789013D /* CarPlayManager.swift */; };
-		A1234567890123456789013E /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789013F /* AIService.swift */; };
-		A1234567890123456789014A /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789014B /* ChatViewController.swift */; };
-		A1234567890123456789014C /* VoiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789014D /* VoiceManager.swift */; };
+		7A92BA112C719B8A0071C47B /* AIChatBotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA102C719B8A0071C47B /* AIChatBotApp.swift */; };
+		7A92BA132C719B8A0071C47B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA122C719B8A0071C47B /* ContentView.swift */; };
+		7A92BA152C719B8C0071C47B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A92BA142C719B8C0071C47B /* Assets.xcassets */; };
+		7A92BA182C719B8C0071C47B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A92BA172C719B8C0071C47B /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A1234567890123456789012A /* AIChatBot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AIChatBot.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1234567890123456789012B /* AIChatBotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatBotApp.swift; sourceTree = "<group>"; };
-		A1234567890123456789012D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		A1234567890123456789012F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A1234567890123456789013B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		A1234567890123456789013D /* CarPlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayManager.swift; sourceTree = "<group>"; };
-		A1234567890123456789013F /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
-		A1234567890123456789014B /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
-		A1234567890123456789014D /* VoiceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceManager.swift; sourceTree = "<group>"; };
-		A1234567890123456789015A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A1234567890123456789015B /* AIChatBot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AIChatBot.entitlements; sourceTree = "<group>"; };
+		7A92BA0D2C719B8A0071C47B /* AIChatBot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AIChatBot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A92BA102C719B8A0071C47B /* AIChatBotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatBotApp.swift; sourceTree = "<group>"; };
+		7A92BA122C719B8A0071C47B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		7A92BA142C719B8C0071C47B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7A92BA172C719B8C0071C47B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A1234567890123456789012G /* Frameworks */ = {
+		7A92BA0A2C719B8A0071C47B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -42,57 +32,51 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		A1234567890123456789012H /* AIChatBot */ = {
+		7A92BA042C719B8A0071C47B = {
 			isa = PBXGroup;
 			children = (
-				A1234567890123456789012B /* AIChatBotApp.swift */,
-				A1234567890123456789012D /* ContentView.swift */,
-				A1234567890123456789013D /* CarPlayManager.swift */,
-				A1234567890123456789013F /* AIService.swift */,
-				A1234567890123456789014B /* ChatViewController.swift */,
-				A1234567890123456789014D /* VoiceManager.swift */,
-				A1234567890123456789012F /* Assets.xcassets */,
-				A1234567890123456789015A /* Info.plist */,
-				A1234567890123456789015B /* AIChatBot.entitlements */,
+				7A92BA0F2C719B8A0071C47B /* AIChatBot */,
+				7A92BA0E2C719B8A0071C47B /* Products */,
 			);
-			path = AIChatBot;
 			sourceTree = "<group>";
 		};
-		A1234567890123456789012I /* Preview Content */ = {
+		7A92BA0E2C719B8A0071C47B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A1234567890123456789013B /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		A1234567890123456789012J /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				A1234567890123456789012A /* AIChatBot.app */,
+				7A92BA0D2C719B8A0071C47B /* AIChatBot.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A1234567890123456789012K = {
+		7A92BA0F2C719B8A0071C47B /* AIChatBot */ = {
 			isa = PBXGroup;
 			children = (
-				A1234567890123456789012H /* AIChatBot */,
-				A1234567890123456789012I /* Preview Content */,
-				A1234567890123456789012J /* Products */,
+				7A92BA102C719B8A0071C47B /* AIChatBotApp.swift */,
+				7A92BA122C719B8A0071C47B /* ContentView.swift */,
+				7A92BA142C719B8C0071C47B /* Assets.xcassets */,
+				7A92BA162C719B8C0071C47B /* Preview Content */,
 			);
+			path = AIChatBot;
+			sourceTree = "<group>";
+		};
+		7A92BA162C719B8C0071C47B /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				7A92BA172C719B8C0071C47B /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A1234567890123456789012L /* AIChatBot */ = {
+		7A92BA0C2C719B8A0071C47B /* AIChatBot */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A1234567890123456789012M /* Build configuration list for PBXNativeTarget "AIChatBot" */;
+			buildConfigurationList = 7A92BA1B2C719B8C0071C47B /* Build configuration list for PBXNativeTarget "AIChatBot" */;
 			buildPhases = (
-				A1234567890123456789012N /* Sources */,
-				A1234567890123456789012G /* Frameworks */,
-				A1234567890123456789012O /* Resources */,
+				7A92BA092C719B8A0071C47B /* Sources */,
+				7A92BA0A2C719B8A0071C47B /* Frameworks */,
+				7A92BA0B2C719B8A0071C47B /* Resources */,
 			);
 			buildRules = (
 			);
@@ -100,25 +84,25 @@
 			);
 			name = AIChatBot;
 			productName = AIChatBot;
-			productReference = A1234567890123456789012A /* AIChatBot.app */;
+			productReference = 7A92BA0D2C719B8A0071C47B /* AIChatBot.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		A1234567890123456789012P /* Project object */ = {
+		7A92BA052C719B8A0071C47B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
-					A1234567890123456789012L = {
+					7A92BA0C2C719B8A0071C47B = {
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
 			};
-			buildConfigurationList = A1234567890123456789012Q /* Build configuration list for PBXProject "AIChatBot" */;
+			buildConfigurationList = 7A92BA082C719B8A0071C47B /* Build configuration list for PBXProject "AIChatBot" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -126,46 +110,42 @@
 				en,
 				Base,
 			);
-			mainGroup = A1234567890123456789012K;
-			productRefGroup = A1234567890123456789012J /* Products */;
+			mainGroup = 7A92BA042C719B8A0071C47B;
+			productRefGroup = 7A92BA0E2C719B8A0071C47B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A1234567890123456789012L /* AIChatBot */,
+				7A92BA0C2C719B8A0071C47B /* AIChatBot */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A1234567890123456789012O /* Resources */ = {
+		7A92BA0B2C719B8A0071C47B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1234567890123456789013A /* Preview Assets.xcassets in Resources */,
-				A1234567890123456789012E /* Assets.xcassets in Resources */,
+				7A92BA182C719B8C0071C47B /* Preview Assets.xcassets in Resources */,
+				7A92BA152C719B8C0071C47B /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		A1234567890123456789012N /* Sources */ = {
+		7A92BA092C719B8A0071C47B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1234567890123456789012C /* ContentView.swift in Sources */,
-				A1234567890123456789013C /* CarPlayManager.swift in Sources */,
-				A1234567890123456789013E /* AIService.swift in Sources */,
-				A1234567890123456789014A /* ChatViewController.swift in Sources */,
-				A1234567890123456789014C /* VoiceManager.swift in Sources */,
-				A1234567890123456789012A /* AIChatBotApp.swift in Sources */,
+				7A92BA132C719B8A0071C47B /* ContentView.swift in Sources */,
+				7A92BA112C719B8A0071C47B /* AIChatBotApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		A1234567890123456789012R /* Debug */ = {
+		7A92BA192C719B8C0071C47B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -217,7 +197,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -228,7 +208,7 @@
 			};
 			name = Debug;
 		};
-		A1234567890123456789012S /* Release */ = {
+		7A92BA1A2C719B8C0071C47B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -274,7 +254,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -284,24 +264,21 @@
 			};
 			name = Release;
 		};
-		A1234567890123456789012T /* Debug */ = {
+		7A92BA1C2C719B8C0071C47B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AIChatBot/AIChatBot.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_ASSET_PATHS = "\"AIChatBot/Preview Content\"";
+				DEVELOPMENT_TEAM = GR7443HJWJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AIChatBot/Info.plist;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to the microphone for voice commands and AI chat interactions.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app needs location access for CarPlay functionality.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -309,7 +286,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.AIChatBot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.phlave.AIChatBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -317,24 +294,21 @@
 			};
 			name = Debug;
 		};
-		A1234567890123456789012U /* Release */ = {
+		7A92BA1D2C719B8C0071C47B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AIChatBot/AIChatBot.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_ASSET_PATHS = "\"AIChatBot/Preview Content\"";
+				DEVELOPMENT_TEAM = GR7443HJWJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AIChatBot/Info.plist;
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to the microphone for voice commands and AI chat interactions.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app needs location access for CarPlay functionality.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -342,7 +316,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.AIChatBot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.phlave.AIChatBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -353,25 +327,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A1234567890123456789012M /* Build configuration list for PBXNativeTarget "AIChatBot" */ = {
+		7A92BA082C719B8A0071C47B /* Build configuration list for PBXProject "AIChatBot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A1234567890123456789012T /* Debug */,
-				A1234567890123456789012U /* Release */,
+				7A92BA192C719B8C0071C47B /* Debug */,
+				7A92BA1A2C719B8C0071C47B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A1234567890123456789012Q /* Build configuration list for PBXProject "AIChatBot" */ = {
+		7A92BA1B2C719B8C0071C47B /* Build configuration list for PBXNativeTarget "AIChatBot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A1234567890123456789012R /* Debug */,
-				A1234567890123456789012S /* Release */,
+				7A92BA1C2C719B8C0071C47B /* Debug */,
+				7A92BA1D2C719B8C0071C47B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = A1234567890123456789012P /* Project object */;
-} 
+	rootObject = 7A92BA052C719B8A0071C47B /* Project object */;
+}
