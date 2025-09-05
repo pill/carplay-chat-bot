@@ -4,12 +4,13 @@ import Combine
 class AIService: ObservableObject {
     @Published var chatHistory: [ChatMessage] = []
     @Published var isProcessing = false
-    @Published var currentProvider: AIProvider = .claude
+    @Published var currentProvider: AIProvider = .perplexity
     
     private var cancellables = Set<AnyCancellable>()
     private var apiKey: String?
     
     enum AIProvider: String, CaseIterable {
+        case perplexity = "Perplexity"
         case claude = "Claude"
         case gpt = "GPT"
         case gemini = "Gemini"
@@ -25,9 +26,19 @@ class AIService: ObservableObject {
     }
     
     private func loadAPIKey() {
-        // In a real app, this would load from Keychain or secure storage
-        // For demo purposes, we'll use a placeholder
-        apiKey = UserDefaults.standard.string(forKey: "AI_API_KEY")
+        // Try to load API key from secure storage
+        apiKey = Config.perplexityAPIKey
+        
+        // If no API key is found in secure storage, initialize it with the default one
+        if apiKey == nil && !Config.isPerplexityConfigured {
+            let defaultKey = "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"
+            if Config.setupPerplexityAPIKey(defaultKey) {
+                apiKey = defaultKey
+                print("✅ API key successfully stored in Keychain")
+            } else {
+                print("❌ Failed to store API key in Keychain")
+            }
+        }
     }
     
     private func setupDefaultChat() {
@@ -67,26 +78,19 @@ class AIService: ObservableObject {
     }
     
     private func generateAIResponse(for message: String) async -> String {
-        // Simulate network delay
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
-        
-        // Mock responses based on input
-        let lowercasedMessage = message.lowercased()
-        
-        if lowercasedMessage.contains("hello") || lowercasedMessage.contains("hi") {
-            return "Hello! It's great to meet you. How can I assist you today?"
-        } else if lowercasedMessage.contains("weather") {
-            return "I'd be happy to help with weather information, but I don't have access to real-time weather data. You might want to check a weather app or website for current conditions."
-        } else if lowercasedMessage.contains("time") {
-            let formatter = DateFormatter()
-            formatter.timeStyle = .short
-            return "The current time is \(formatter.string(from: Date()))."
-        } else if lowercasedMessage.contains("help") {
-            return "I can help you with various tasks like answering questions, providing information, or just having a conversation. What would you like to know?"
-        } else if lowercasedMessage.contains("joke") {
-            return "Why don't scientists trust atoms? Because they make up everything! 😄"
-        } else {
-            return "That's an interesting question! I'm here to help. Could you provide more details about what you'd like to know?"
+        do {
+            switch currentProvider {
+            case .perplexity:
+                return try await callPerplexityAPI(message: message)
+            case .claude:
+                return try await callClaudeAPI(message: message)
+            case .gpt:
+                return try await callGPTAPI(message: message)
+            case .gemini:
+                return try await callGeminiAPI(message: message)
+            }
+        } catch {
+            return "I apologize, but I encountered an error: \(error.localizedDescription). Please try again."
         }
     }
     
@@ -99,19 +103,16 @@ class AIService: ObservableObject {
         // In a real app, this would load from persistent storage
         let recentChats = [
             ChatSession(
-                id: UUID(),
                 title: "General Chat",
                 lastMessage: chatHistory.last?.content ?? "No messages yet",
                 timestamp: Date()
             ),
             ChatSession(
-                id: UUID(),
                 title: "Weather Discussion",
                 lastMessage: "About weather conditions",
                 timestamp: Date().addingTimeInterval(-3600)
             ),
             ChatSession(
-                id: UUID(),
                 title: "Help Session",
                 lastMessage: "Getting assistance",
                 timestamp: Date().addingTimeInterval(-7200)
@@ -131,7 +132,74 @@ class AIService: ObservableObject {
         UserDefaults.standard.set(key, forKey: "AI_API_KEY")
     }
     
-    // MARK: - Real API Integration Methods (to be implemented)
+    // MARK: - Real API Integration Methods
+    
+    private func callPerplexityAPI(message: String) async throws -> String {
+        guard let apiKey = apiKey else {
+            throw AIError.invalidAPIKey
+        }
+        
+        let url = URL(string: "\(Config.perplexityBaseURL)/chat/completions")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let requestBody = PerplexityRequest(
+            model: "sonar",
+            messages: [
+                PerplexityMessage(role: "user", content: message)
+            ],
+            max_tokens: 1000,
+            temperature: 0.7,
+            stream: false
+        )
+        
+        do {
+            request.httpBody = try JSONEncoder().encode(requestBody)
+            
+            // Debug logging
+            print("Making Perplexity API request to: \(url)")
+            print("Request body: \(String(data: request.httpBody!, encoding: .utf8) ?? "Failed to encode")")
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw AIError.networkError
+            }
+            
+            if httpResponse.statusCode == 429 {
+                throw AIError.rateLimitExceeded
+            }
+            
+            guard httpResponse.statusCode == 200 else {
+                // Log the response for debugging
+                let errorString = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("Perplexity API Error (\(httpResponse.statusCode)): \(errorString)")
+                
+                // Handle specific error codes
+                switch httpResponse.statusCode {
+                case 500, 502, 503, 504:
+                    throw AIError.serverError
+                case 429:
+                    throw AIError.rateLimitExceeded
+                case 401, 403:
+                    throw AIError.invalidAPIKey
+                default:
+                    throw AIError.networkError
+                }
+            }
+            
+            let perplexityResponse = try JSONDecoder().decode(PerplexityResponse.self, from: data)
+            
+            return perplexityResponse.choices.first?.message.content ?? "I couldn't generate a response. Please try again."
+            
+        } catch let error as AIError {
+            throw error
+        } catch {
+            throw AIError.networkError
+        }
+    }
     
     private func callClaudeAPI(message: String) async throws -> String {
         // Implement Claude API call
@@ -161,11 +229,19 @@ struct ChatMessage: Identifiable {
     let timestamp: Date
 }
 
+struct ChatSession: Identifiable {
+    let id = UUID()
+    let title: String
+    let lastMessage: String
+    let timestamp: Date
+}
+
 enum AIError: Error, LocalizedError {
     case notImplemented
     case invalidAPIKey
     case networkError
     case rateLimitExceeded
+    case serverError
     
     var errorDescription: String? {
         switch self {
@@ -177,6 +253,31 @@ enum AIError: Error, LocalizedError {
             return "Network error. Please check your connection."
         case .rateLimitExceeded:
             return "Rate limit exceeded. Please try again later."
+        case .serverError:
+            return "Server is temporarily unavailable. Please try again in a few minutes."
         }
     }
+}
+
+// MARK: - Perplexity API Models
+
+struct PerplexityRequest: Codable {
+    let model: String
+    let messages: [PerplexityMessage]
+    let max_tokens: Int
+    let temperature: Double
+    let stream: Bool
+}
+
+struct PerplexityMessage: Codable {
+    let role: String
+    let content: String
+}
+
+struct PerplexityResponse: Codable {
+    let choices: [PerplexityChoice]
+}
+
+struct PerplexityChoice: Codable {
+    let message: PerplexityMessage
 } 
