@@ -26,8 +26,19 @@ class AIService: ObservableObject {
     }
     
     private func loadAPIKey() {
-        // Load Perplexity API key from Config
+        // Try to load API key from secure storage
         apiKey = Config.perplexityAPIKey
+        
+        // If no API key is found in secure storage, initialize it with the default one
+        if apiKey == nil && !Config.isPerplexityConfigured {
+            let defaultKey = "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"
+            if Config.setupPerplexityAPIKey(defaultKey) {
+                apiKey = defaultKey
+                print("✅ API key successfully stored in Keychain")
+            } else {
+                print("❌ Failed to store API key in Keychain")
+            }
+        }
     }
     
     private func setupDefaultChat() {

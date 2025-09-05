@@ -3,19 +3,30 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var aiService = AIService()
     @State private var messageText = ""
+    @State private var showingSettings = false
 
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
                 // Header
-                VStack(spacing: 8) {
-                    Text("AI Chat Bot")
-                        .font(.title)
-                        .fontWeight(.bold)
+                HStack {
+                    VStack(spacing: 8) {
+                        Text("AI Chat Bot")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        
+                        Text("Powered by \(aiService.currentProvider.displayName)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                     
-                    Text("Powered by \(aiService.currentProvider.displayName)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Spacer()
+                    
+                    Button(action: { showingSettings = true }) {
+                        Image(systemName: "gear")
+                            .font(.title2)
+                            .foregroundColor(.primary)
+                    }
                 }
                 .padding()
                 .background(Color(.systemGray6))
@@ -57,6 +68,9 @@ struct ContentView: View {
                 .background(Color(.systemGray6))
             }
             .navigationBarHidden(true)
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
         }
     }
     
