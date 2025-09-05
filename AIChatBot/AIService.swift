@@ -176,7 +176,18 @@ class AIService: ObservableObject {
                 // Log the response for debugging
                 let errorString = String(data: data, encoding: .utf8) ?? "Unknown error"
                 print("Perplexity API Error (\(httpResponse.statusCode)): \(errorString)")
-                throw AIError.networkError
+                
+                // Handle specific error codes
+                switch httpResponse.statusCode {
+                case 500, 502, 503, 504:
+                    throw AIError.serverError
+                case 429:
+                    throw AIError.rateLimitExceeded
+                case 401, 403:
+                    throw AIError.invalidAPIKey
+                default:
+                    throw AIError.networkError
+                }
             }
             
             let perplexityResponse = try JSONDecoder().decode(PerplexityResponse.self, from: data)
@@ -230,6 +241,7 @@ enum AIError: Error, LocalizedError {
     case invalidAPIKey
     case networkError
     case rateLimitExceeded
+    case serverError
     
     var errorDescription: String? {
         switch self {
@@ -241,6 +253,8 @@ enum AIError: Error, LocalizedError {
             return "Network error. Please check your connection."
         case .rateLimitExceeded:
             return "Rate limit exceeded. Please try again later."
+        case .serverError:
+            return "Server is temporarily unavailable. Please try again in a few minutes."
         }
     }
 }

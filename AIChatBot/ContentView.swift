@@ -4,6 +4,8 @@ struct ContentView: View {
     @StateObject private var aiService = AIService()
     @State private var messageText = ""
     @State private var showingSettings = false
+    @State private var isUserScrolling = false
+    @State private var showScrollToBottom = false
 
     var body: some View {
         NavigationView {
@@ -32,25 +34,124 @@ struct ContentView: View {
                 .background(Color(.systemGray6))
 
                 // Chat messages
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(aiService.chatHistory) { message in
-                            MessageBubble(message: message)
-                        }
-                        
-                        if aiService.isProcessing {
-                            HStack {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                                Text("Thinking...")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
+                ScrollViewReader { proxy in
+                    ZStack {
+                        ScrollView {
+                            LazyVStack(spacing: 12) {
+                                ForEach(aiService.chatHistory) { message in
+                                    MessageBubble(message: message)
+                                        .id(message.id)
+                                }
+                                
+                                if aiService.isProcessing {
+                                    HStack {
+                                        ProgressView()
+                                            .scaleEffect(0.8)
+                                        Text("Thinking...")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal)
+                                    .id("thinking")
+                                }
+                                
+                                // Invisible spacer to ensure proper bottom padding
+                                Color.clear
+                                    .frame(height: 1)
+                                    .id("bottom")
                             }
-                            .padding(.horizontal)
+                            .padding()
+                        }
+                        .onAppear {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                if let lastMessage = aiService.chatHistory.last {
+                                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                                } else {
+                                    proxy.scrollTo("bottom", anchor: .bottom)
+                                }
+                            }
+                        }
+                        .onChange(of: aiService.chatHistory.count) { _ in
+                            if !isUserScrolling {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    if let lastMessage = aiService.chatHistory.last {
+                                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                                    } else {
+                                        proxy.scrollTo("bottom", anchor: .bottom)
+                                    }
+                                }
+                            }
+                        }
+                        .onChange(of: aiService.isProcessing) { isProcessing in
+                            if isProcessing && !isUserScrolling {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    proxy.scrollTo("thinking", anchor: .bottom)
+                                }
+                            } else if !isProcessing && !isUserScrolling {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    if let lastMessage = aiService.chatHistory.last {
+                                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                                    } else {
+                                        proxy.scrollTo("bottom", anchor: .bottom)
+                                    }
+                                }
+                            }
+                        }
+                        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                if let lastMessage = aiService.chatHistory.last {
+                                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                                } else {
+                                    proxy.scrollTo("bottom", anchor: .bottom)
+                                }
+                            }
+                        }
+                        .gesture(
+                            DragGesture()
+                                .onChanged { _ in
+                                    isUserScrolling = true
+                                    showScrollToBottom = true
+                                }
+                                .onEnded { _ in
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        isUserScrolling = false
+                                        showScrollToBottom = false
+                                    }
+                                }
+                        )
+                        
+                        // Scroll to bottom button
+                        if showScrollToBottom {
+                            VStack {
+                                Spacer()
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        withAnimation(.easeInOut(duration: 0.5)) {
+                                            if let lastMessage = aiService.chatHistory.last {
+                                                proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                                            } else {
+                                                proxy.scrollTo("bottom", anchor: .bottom)
+                                            }
+                                        }
+                                        showScrollToBottom = false
+                                        isUserScrolling = false
+                                    }) {
+                                        Image(systemName: "arrow.down.circle.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.blue)
+                                            .background(Color.white)
+                                            .clipShape(Circle())
+                                            .shadow(radius: 2)
+                                    }
+                                    .padding(.trailing)
+                                    .padding(.bottom, 10)
+                                }
+                            }
+                            .transition(.opacity)
                         }
                     }
-                    .padding()
                 }
 
                 // Input area
