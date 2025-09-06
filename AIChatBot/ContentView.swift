@@ -286,9 +286,11 @@ struct ContentView: View {
             print("🎤 Always-on voice command received: '\(command)'")
             processVoiceInput(command)
             
-            // Restart command listening after processing a command
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                self.restartAlwaysOnVoiceCommands()
+            // Only restart command listening if we're not starting regular recording
+            if !command.lowercased().contains("start ai") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.restartAlwaysOnVoiceCommands()
+                }
             }
         }
     }
@@ -320,7 +322,14 @@ struct ContentView: View {
                 voiceManager.stopRecording()
                 processVoiceInput(voiceInput)
                 
-                // Restart command listening after processing
+                // Restart command listening after processing voice input
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    self.restartAlwaysOnVoiceCommands()
+                }
+            } else if voiceManager.isRecording {
+                // If recording but no input, just stop and restart command listening
+                print("🎤 Auto-stopping recording with no input")
+                voiceManager.stopRecording()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     self.restartAlwaysOnVoiceCommands()
                 }
