@@ -14,11 +14,9 @@ class VoiceManager: NSObject, ObservableObject {
     private let audioEngine = AVAudioEngine()
     
     // Always-on voice command listening
-    private var commandRecognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    private var commandRecognitionTask: SFSpeechRecognitionTask?
-    private let commandAudioEngine = AVAudioEngine()
     private var commandCompletion: ((String) -> Void)?
     private var isCommandListeningMode = false
+    private var isAlwaysOnListening = false
     
     private let synthesizer = AVSpeechSynthesizer()
     
@@ -72,6 +70,7 @@ class VoiceManager: NSObject, ObservableObject {
     private func startRecordingInternal(completion: @escaping (String) -> Void) {
         print("🎤 Starting internal voice recording...")
         isCommandListeningMode = false
+        isAlwaysOnListening = false
         
         // Configure audio session for iOS Simulator compatibility
         do {
@@ -102,8 +101,26 @@ class VoiceManager: NSObject, ObservableObject {
                 if let result = result {
                     let transcribedText = result.bestTranscription.formattedString
                     print("🎤 Speech recognition result: '\(transcribedText)' (isFinal: \(result.isFinal))")
-                    completion(transcribedText)
-                    isFinal = result.isFinal
+                    
+                    // Check if we're in command listening mode
+                    if self?.isCommandListeningMode == true {
+                        // Check if it's a voice command
+                        if let command = self?.processVoiceCommand(transcribedText) {
+                            print("🎤 Voice command detected: \(command)")
+                            self?.commandCompletion?(transcribedText)
+                            self?.stopRecording()
+                            return
+                        }
+                        
+                        // If it's final and not a command, ignore it
+                        if result.isFinal {
+                            print("🎤 Final result but not a voice command, continuing to listen...")
+                        }
+                    } else {
+                        // Regular recording mode
+                        completion(transcribedText)
+                        isFinal = result.isFinal
+                    }
                 }
                 
                 if let error = error {
@@ -112,8 +129,14 @@ class VoiceManager: NSObject, ObservableObject {
                     if let nsError = error as NSError? {
                         switch nsError.code {
                         case 1101: // Speech recognition service unavailable
-                            print("🎤 Speech recognition service unavailable, retrying...")
+                            print("🎤 Speech recognition service unavailable, continuing...")
                             // Don't stop recording, just log the error
+                        case 1110: // No speech detected
+                            print("🎤 No speech detected, continuing...")
+                            // Don't stop recording, just continue
+                        case 1111: // Speech recognition not available
+                            print("🎤 Speech recognition not available, stopping")
+                            self?.stopRecording()
                         default:
                             print("🎤 Other speech recognition error: \(nsError.localizedDescription)")
                         }
@@ -121,8 +144,10 @@ class VoiceManager: NSObject, ObservableObject {
                 }
                 
                 if error != nil || isFinal {
-                    print("🎤 Stopping recording due to error or final result")
-                    self?.stopRecording()
+                    if self?.isCommandListeningMode == false {
+                        print("🎤 Stopping recording due to error or final result")
+                        self?.stopRecording()
+                    }
                 }
             }
         }
@@ -252,6 +277,7 @@ class VoiceManager: NSObject, ObservableObject {
     private func startListeningForCommandsInternal(completion: @escaping (String) -> Void) {
         print("🎤 Starting internal command listening...")
         isCommandListeningMode = true
+        isAlwaysOnListening = true
         
         // Configure audio session
         do {
@@ -265,16 +291,16 @@ class VoiceManager: NSObject, ObservableObject {
         }
         
         // Create recognition request for commands
-        commandRecognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-        guard let commandRecognitionRequest = commandRecognitionRequest else {
+        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+        guard let recognitionRequest = recognitionRequest else {
             print("🎤 Unable to create command recognition request")
             return
         }
         
-        commandRecognitionRequest.shouldReportPartialResults = true
+        recognitionRequest.shouldReportPartialResults = true
         
-        // Start command recognition task
-        commandRecognitionTask = speechRecognizer?.recognitionTask(with: commandRecognitionRequest) { [weak self] result, error in
+        // Start recognition task
+        recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
             DispatchQueue.main.async {
                 if let result = result {
                     let transcribedText = result.bestTranscription.formattedString
@@ -318,7 +344,7 @@ class VoiceManager: NSObject, ObservableObject {
         }
         
         // Configure audio input for command listening
-        let inputNode = commandAudioEngine.inputNode
+        let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         print("🎤 Command listening audio format: sampleRate=\(recordingFormat.sampleRate), channels=\(recordingFormat.channelCount)")
         
@@ -328,14 +354,14 @@ class VoiceManager: NSObject, ObservableObject {
         }
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
-            commandRecognitionRequest.append(buffer)
+            recognitionRequest.append(buffer)
         }
         print("🎤 Command listening audio tap installed")
         
-        // Start command audio engine
+        // Start audio engine
         do {
-            commandAudioEngine.prepare()
-            try commandAudioEngine.start()
+            audioEngine.prepare()
+            try audioEngine.start()
             isListeningForCommands = true
             print("🎤 Command listening audio engine started, isListeningForCommands = \(isListeningForCommands)")
         } catch {
@@ -348,14 +374,16 @@ class VoiceManager: NSObject, ObservableObject {
         print("🎤 Stopping always-on voice command listening...")
         guard isListeningForCommands else { return }
         
-        commandRecognitionTask?.cancel()
-        commandRecognitionTask = nil
-        commandRecognitionRequest = nil
+        recognitionTask?.cancel()
+        recognitionTask = nil
+        recognitionRequest = nil
         
-        commandAudioEngine.stop()
-        commandAudioEngine.inputNode.removeTap(onBus: 0)
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
         
         isListeningForCommands = false
+        isCommandListeningMode = false
+        isAlwaysOnListening = false
         // Don't clear commandCompletion here - we need it for restart
         print("🎤 Command listening stopped")
     }
