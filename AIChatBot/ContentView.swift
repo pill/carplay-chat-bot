@@ -106,7 +106,12 @@ struct ContentView: View {
                                         proxy.scrollTo(lastMessage.id, anchor: .bottom)
                                         // Auto-speak AI responses
                                         if lastMessage.isFromAI && lastMessage.content != lastSpokenMessage {
-                                            voiceManager.speak(lastMessage.content)
+                                            voiceManager.speak(lastMessage.content) {
+                                                // Restart command listening after AI response
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                                    self.restartAlwaysOnVoiceCommands()
+                                                }
+                                            }
                                             lastSpokenMessage = lastMessage.content
                                         }
                                     } else {
@@ -364,7 +369,12 @@ struct ContentView: View {
             voiceManager.continueSpeaking()
         case .`repeat`:
             if let lastMessage = aiService.chatHistory.last, lastMessage.isFromAI {
-                voiceManager.speak(lastMessage.content)
+                voiceManager.speak(lastMessage.content) {
+                    // Restart command listening after repeating message
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.restartAlwaysOnVoiceCommands()
+                    }
+                }
             }
         case .newChat:
             aiService.startNewChat()
@@ -374,10 +384,20 @@ struct ContentView: View {
             startVoiceInput()
         case .stopAI:
             aiService.stopAIProcessing()
-            voiceManager.speak("AI processing stopped")
+            voiceManager.speak("AI processing stopped") {
+                // Restart command listening after speaking
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.restartAlwaysOnVoiceCommands()
+                }
+            }
         case .help:
             let helpMessage = "I can respond to voice commands like 'stop', 'repeat', 'new chat', 'start AI' to begin voice recording, 'stop AI' to stop processing, or you can ask me questions directly."
-            voiceManager.speak(helpMessage)
+            voiceManager.speak(helpMessage) {
+                // Restart command listening after help message
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.restartAlwaysOnVoiceCommands()
+                }
+            }
         }
     }
     

@@ -17,6 +17,7 @@ class VoiceManager: NSObject, ObservableObject {
     private var commandCompletion: ((String) -> Void)?
     private var isCommandListeningMode = false
     private var isAlwaysOnListening = false
+    private var speechCompletion: (() -> Void)?
     
     private let synthesizer = AVSpeechSynthesizer()
     
@@ -242,12 +243,26 @@ class VoiceManager: NSObject, ObservableObject {
         }
     }
     
-    func speak(_ text: String) {
-        guard !text.isEmpty else { return }
+    func speak(_ text: String, completion: (() -> Void)? = nil) {
+        guard !text.isEmpty else { 
+            completion?()
+            return 
+        }
+        
+        print("🎤 Starting speech synthesis...")
+        
+        // Store completion handler
+        speechCompletion = completion
         
         // Stop any current speech
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
+        }
+        
+        // Stop command listening while speaking to avoid audio conflicts
+        if isListeningForCommands {
+            print("🎤 Stopping command listening for speech synthesis")
+            stopListeningForCommands()
         }
         
         // Configure audio session for speech synthesis
@@ -276,6 +291,12 @@ class VoiceManager: NSObject, ObservableObject {
             synthesizer.stopSpeaking(at: .immediate)
         }
         isSpeaking = false
+        
+        // Restart command listening after speech finishes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            print("🎤 Restarting command listening after speech finished")
+            // Note: We'll need to restart from ContentView since we don't have access to the completion handler here
+        }
     }
     
     func pauseSpeaking() {
@@ -495,19 +516,28 @@ class VoiceManager: NSObject, ObservableObject {
 extension VoiceManager: AVSpeechSynthesizerDelegate {
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         DispatchQueue.main.async {
+            print("🎤 Speech synthesis finished")
             self.isSpeaking = false
+            self.speechCompletion?()
+            self.speechCompletion = nil
         }
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         DispatchQueue.main.async {
+            print("🎤 Speech synthesis cancelled")
             self.isSpeaking = false
+            self.speechCompletion?()
+            self.speechCompletion = nil
         }
     }
     
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didPause utterance: AVSpeechUtterance) {
         DispatchQueue.main.async {
+            print("🎤 Speech synthesis paused")
             self.isSpeaking = false
+            self.speechCompletion?()
+            self.speechCompletion = nil
         }
     }
 }
