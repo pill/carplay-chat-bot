@@ -148,9 +148,10 @@ class AIService: ObservableObject {
         let requestBody = PerplexityRequest(
             model: "sonar",
             messages: [
+                PerplexityMessage(role: "system", content: "Please provide concise, helpful answers in exactly 3 sentences or less. Be direct and to the point."),
                 PerplexityMessage(role: "user", content: message)
             ],
-            max_tokens: 1000,
+            max_tokens: 300,
             temperature: 0.7,
             stream: false
         )
