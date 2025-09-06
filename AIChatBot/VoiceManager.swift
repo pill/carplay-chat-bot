@@ -442,10 +442,17 @@ class VoiceManager: NSObject, ObservableObject {
             return
         }
         
+        print("🎤 Command completion handler found, stopping current listening...")
         stopListeningForCommands()
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             print("🎤 Restarting command listening with existing completion handler")
-            self.startListeningForCommands(completion: completion)
+            // Double-check that we still have the completion handler
+            if self.commandCompletion != nil {
+                self.startListeningForCommands(completion: completion)
+            } else {
+                print("🎤 Command completion handler lost during restart, cannot restart")
+            }
         }
     }
     

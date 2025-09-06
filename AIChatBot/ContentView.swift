@@ -297,7 +297,9 @@ struct ContentView: View {
     
     private func restartAlwaysOnVoiceCommands() {
         print("🎤 Restarting always-on voice commands...")
-        voiceManager.restartCommandListening()
+        // Use a fresh start instead of restart to avoid any state issues
+        startAlwaysOnVoiceCommands()
+        print("🎤 Command listening restart initiated")
     }
 
     private func startVoiceInput() {
@@ -324,6 +326,7 @@ struct ContentView: View {
                 
                 // Restart command listening after processing voice input
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    print("🎤 Restarting command listening after voice input processing")
                     self.restartAlwaysOnVoiceCommands()
                 }
             } else if voiceManager.isRecording {
@@ -331,6 +334,7 @@ struct ContentView: View {
                 print("🎤 Auto-stopping recording with no input")
                 voiceManager.stopRecording()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    print("🎤 Restarting command listening after no input")
                     self.restartAlwaysOnVoiceCommands()
                 }
             }
