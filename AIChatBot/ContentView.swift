@@ -296,6 +296,10 @@ struct ContentView: View {
     private func startVoiceInput() {
         print("🎤 startVoiceInput() called")
         voiceInput = ""
+        
+        // Stop command listening when starting regular recording
+        voiceManager.stopListeningForCommands()
+        
         voiceManager.startRecording { transcription in
             DispatchQueue.main.async {
                 print("🎤 Voice transcription: '\(transcription)'")
@@ -310,6 +314,11 @@ struct ContentView: View {
                 print("🎤 Auto-stopping recording and processing input")
                 voiceManager.stopRecording()
                 processVoiceInput(voiceInput)
+                
+                // Restart command listening after processing
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.startAlwaysOnVoiceCommands()
+                }
             }
         }
     }

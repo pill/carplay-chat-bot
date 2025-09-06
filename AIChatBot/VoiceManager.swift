@@ -58,8 +58,9 @@ class VoiceManager: NSObject, ObservableObject {
         }
         
         print("🎤 Starting voice recording...")
-        // Stop any existing recording
+        // Stop any existing recording and command listening
         stopRecording()
+        stopListeningForCommands()
         
         // Configure audio session for iOS Simulator compatibility
         do {
@@ -134,8 +135,13 @@ class VoiceManager: NSObject, ObservableObject {
     }
     
     func stopRecording() {
-        guard isRecording else { return }
+        print("🎤 VoiceManager.stopRecording() called")
+        guard isRecording else { 
+            print("🎤 Not currently recording, nothing to stop")
+            return 
+        }
         
+        print("🎤 Stopping voice recording...")
         audioEngine.stop()
         audioEngine.inputNode.removeTap(onBus: 0)
         recognitionRequest?.endAudio()
@@ -144,6 +150,7 @@ class VoiceManager: NSObject, ObservableObject {
         recognitionRequest = nil
         recognitionTask = nil
         isRecording = false
+        print("🎤 Voice recording stopped successfully")
         
         // Reset audio session
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
