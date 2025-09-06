@@ -44,11 +44,13 @@ class VoiceManager: NSObject, ObservableObject {
     }
     
     func startRecording(completion: @escaping (String) -> Void) {
+        print("🎤 VoiceManager.startRecording() called")
         guard hasPermission else {
-            print("Speech recognition permission not granted")
+            print("🎤 Speech recognition permission not granted")
             return
         }
         
+        print("🎤 Starting voice recording...")
         // Stop any existing recording
         stopRecording()
         
@@ -57,18 +59,20 @@ class VoiceManager: NSObject, ObservableObject {
             let audioSession = AVAudioSession.sharedInstance()
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            print("🎤 Audio session configured successfully")
         } catch {
-            print("Failed to set up audio session: \(error)")
+            print("🎤 Failed to set up audio session: \(error)")
             return
         }
         
         // Create and configure recognition request
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let recognitionRequest = recognitionRequest else {
-            print("Unable to create recognition request")
+            print("🎤 Unable to create recognition request")
             return
         }
         
+        print("🎤 Recognition request created successfully")
         recognitionRequest.shouldReportPartialResults = true
         
         // Start recognition task
@@ -78,11 +82,17 @@ class VoiceManager: NSObject, ObservableObject {
                 
                 if let result = result {
                     let transcribedText = result.bestTranscription.formattedString
+                    print("🎤 Speech recognition result: '\(transcribedText)' (isFinal: \(result.isFinal))")
                     completion(transcribedText)
                     isFinal = result.isFinal
                 }
                 
+                if let error = error {
+                    print("🎤 Speech recognition error: \(error)")
+                }
+                
                 if error != nil || isFinal {
+                    print("🎤 Stopping recording due to error or final result")
                     self?.stopRecording()
                 }
             }
@@ -91,24 +101,27 @@ class VoiceManager: NSObject, ObservableObject {
         // Configure audio input with safer format handling
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
+        print("🎤 Audio format: sampleRate=\(recordingFormat.sampleRate), channels=\(recordingFormat.channelCount)")
         
         // Validate format before using
         guard recordingFormat.sampleRate > 0 && recordingFormat.channelCount > 0 else {
-            print("Invalid audio format: sampleRate=\(recordingFormat.sampleRate), channels=\(recordingFormat.channelCount)")
+            print("🎤 Invalid audio format: sampleRate=\(recordingFormat.sampleRate), channels=\(recordingFormat.channelCount)")
             return
         }
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
             recognitionRequest.append(buffer)
         }
+        print("🎤 Audio tap installed")
         
         // Start audio engine
         do {
             audioEngine.prepare()
             try audioEngine.start()
             isRecording = true
+            print("🎤 Audio engine started successfully, isRecording = \(isRecording)")
         } catch {
-            print("Failed to start audio engine: \(error)")
+            print("🎤 Failed to start audio engine: \(error)")
             stopRecording()
         }
     }
@@ -187,23 +200,32 @@ class VoiceManager: NSObject, ObservableObject {
     
     func processVoiceCommand(_ command: String) -> VoiceCommand? {
         let lowercasedCommand = command.lowercased()
+        print("🎤 VoiceManager processing command: '\(lowercasedCommand)'")
         
         if lowercasedCommand.contains("stop") || lowercasedCommand.contains("pause") {
+            print("🎤 Recognized as .stop command")
             return .stop
         } else if lowercasedCommand.contains("continue") || lowercasedCommand.contains("resume") {
+            print("🎤 Recognized as .continue command")
             return .continue
         } else if lowercasedCommand.contains("repeat") {
+            print("🎤 Recognized as .repeat command")
             return .`repeat`
         } else if lowercasedCommand.contains("new chat") || lowercasedCommand.contains("start over") {
+            print("🎤 Recognized as .newChat command")
             return .newChat
         } else if lowercasedCommand.contains("help") {
+            print("🎤 Recognized as .help command")
             return .help
         } else if lowercasedCommand.contains("start ai") || lowercasedCommand.contains("start processing") || lowercasedCommand.contains("begin ai") {
+            print("🎤 Recognized as .startAI command")
             return .startAI
         } else if lowercasedCommand.contains("stop ai") || lowercasedCommand.contains("stop processing") || lowercasedCommand.contains("cancel ai") {
+            print("🎤 Recognized as .stopAI command")
             return .stopAI
         }
         
+        print("🎤 No voice command recognized")
         return nil
     }
 }
