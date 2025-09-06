@@ -322,19 +322,27 @@ class VoiceManager: NSObject, ObservableObject {
         commandAudioEngine.inputNode.removeTap(onBus: 0)
         
         isListeningForCommands = false
-        commandCompletion = nil
+        // Don't clear commandCompletion here - we need it for restart
         print("🎤 Command listening stopped")
+    }
+    
+    func stopListeningForCommandsCompletely() {
+        print("🎤 Completely stopping always-on voice command listening...")
+        stopListeningForCommands()
+        commandCompletion = nil
+        print("🎤 Command listening completely stopped")
     }
     
     func restartCommandListening() {
         print("🎤 Restarting command listening...")
         guard let completion = commandCompletion else {
-            print("🎤 No command completion handler available")
+            print("🎤 No command completion handler available, cannot restart")
             return
         }
         
         stopListeningForCommands()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            print("🎤 Restarting command listening with existing completion handler")
             self.startListeningForCommands(completion: completion)
         }
     }

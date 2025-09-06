@@ -288,9 +288,14 @@ struct ContentView: View {
             
             // Restart command listening after processing a command
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                self.voiceManager.restartCommandListening()
+                self.restartAlwaysOnVoiceCommands()
             }
         }
+    }
+    
+    private func restartAlwaysOnVoiceCommands() {
+        print("🎤 Restarting always-on voice commands...")
+        voiceManager.restartCommandListening()
     }
 
     private func startVoiceInput() {
@@ -317,7 +322,7 @@ struct ContentView: View {
                 
                 // Restart command listening after processing
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self.startAlwaysOnVoiceCommands()
+                    self.restartAlwaysOnVoiceCommands()
                 }
             }
         }
