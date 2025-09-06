@@ -20,6 +20,33 @@ class VoiceManager: NSObject, ObservableObject {
     
     private let synthesizer = AVSpeechSynthesizer()
     
+    // Helper method to safely remove audio tap
+    private func safelyRemoveAudioTap() {
+        if audioEngine.inputNode.numberOfInputs > 0 {
+            do {
+                audioEngine.inputNode.removeTap(onBus: 0)
+                print("🎤 Audio tap removed successfully")
+            } catch {
+                print("🎤 Error removing audio tap: \(error)")
+            }
+        }
+    }
+    
+    // Helper method to safely install audio tap
+    private func safelyInstallAudioTap(format: AVAudioFormat, bufferSize: AVAudioFrameCount, block: @escaping (AVAudioPCMBuffer, AVAudioTime) -> Void) -> Bool {
+        // First remove any existing tap
+        safelyRemoveAudioTap()
+        
+        do {
+            audioEngine.inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: format, block: block)
+            print("🎤 Audio tap installed successfully")
+            return true
+        } catch {
+            print("🎤 Error installing audio tap: \(error)")
+            return false
+        }
+    }
+    
     override init() {
         super.init()
         synthesizer.delegate = self
@@ -163,10 +190,14 @@ class VoiceManager: NSObject, ObservableObject {
             return
         }
         
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+        // Safely install audio tap
+        guard safelyInstallAudioTap(format: recordingFormat, bufferSize: 1024, block: { buffer, _ in
             recognitionRequest.append(buffer)
+        }) else {
+            print("🎤 Failed to install audio tap, stopping recording")
+            stopRecording()
+            return
         }
-        print("🎤 Audio tap installed")
         
         // Start audio engine
         do {
@@ -189,7 +220,10 @@ class VoiceManager: NSObject, ObservableObject {
         
         print("🎤 Stopping voice recording...")
         audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
+        
+        // Safely remove audio tap
+        safelyRemoveAudioTap()
+        
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
         
@@ -353,10 +387,14 @@ class VoiceManager: NSObject, ObservableObject {
             return
         }
         
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+        // Safely install audio tap for command listening
+        guard safelyInstallAudioTap(format: recordingFormat, bufferSize: 1024, block: { buffer, _ in
             recognitionRequest.append(buffer)
+        }) else {
+            print("🎤 Failed to install command listening audio tap, stopping")
+            stopListeningForCommands()
+            return
         }
-        print("🎤 Command listening audio tap installed")
         
         // Start audio engine
         do {
@@ -379,7 +417,9 @@ class VoiceManager: NSObject, ObservableObject {
         recognitionRequest = nil
         
         audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
+        
+        // Safely remove audio tap
+        safelyRemoveAudioTap()
         
         isListeningForCommands = false
         isCommandListeningMode = false
