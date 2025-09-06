@@ -254,7 +254,7 @@ enum VoiceCommand {
         case .help:
             return "Show help"
         case .startAI:
-            return "Start AI processing"
+            return "Start voice recording"
         case .stopAI:
             return "Stop AI processing"
         }
