@@ -6,11 +6,18 @@ class VoiceManager: NSObject, ObservableObject {
     @Published var isRecording = false
     @Published var isSpeaking = false
     @Published var hasPermission = false
+    @Published var isListeningForCommands = false
     
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
+    
+    // Always-on voice command listening
+    private var commandRecognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    private var commandRecognitionTask: SFSpeechRecognitionTask?
+    private let commandAudioEngine = AVAudioEngine()
+    private var commandCompletion: ((String) -> Void)?
     
     private let synthesizer = AVSpeechSynthesizer()
     
@@ -194,6 +201,109 @@ class VoiceManager: NSObject, ObservableObject {
         if synthesizer.isPaused {
             synthesizer.continueSpeaking()
         }
+    }
+    
+    // MARK: - Always-on Voice Command Listening
+    
+    func startListeningForCommands(completion: @escaping (String) -> Void) {
+        print("🎤 Starting always-on voice command listening...")
+        guard hasPermission else {
+            print("🎤 Speech recognition permission not granted for command listening")
+            return
+        }
+        
+        commandCompletion = completion
+        stopListeningForCommands() // Stop any existing command listening
+        
+        // Configure audio session
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            print("🎤 Command listening audio session configured")
+        } catch {
+            print("🎤 Failed to set up command listening audio session: \(error)")
+            return
+        }
+        
+        // Create recognition request for commands
+        commandRecognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+        guard let commandRecognitionRequest = commandRecognitionRequest else {
+            print("🎤 Unable to create command recognition request")
+            return
+        }
+        
+        commandRecognitionRequest.shouldReportPartialResults = true
+        
+        // Start command recognition task
+        commandRecognitionTask = speechRecognizer?.recognitionTask(with: commandRecognitionRequest) { [weak self] result, error in
+            DispatchQueue.main.async {
+                if let result = result {
+                    let transcribedText = result.bestTranscription.formattedString
+                    print("🎤 Command listening result: '\(transcribedText)' (isFinal: \(result.isFinal))")
+                    
+                    // Check if it's a voice command
+                    if let command = self?.processVoiceCommand(transcribedText) {
+                        print("🎤 Voice command detected: \(command)")
+                        completion(transcribedText)
+                        self?.stopListeningForCommands()
+                        return
+                    }
+                    
+                    // If it's final and not a command, ignore it
+                    if result.isFinal {
+                        print("🎤 Final result but not a voice command, continuing to listen...")
+                    }
+                }
+                
+                if let error = error {
+                    print("🎤 Command listening error: \(error)")
+                    // Don't stop listening on error, just log it
+                }
+            }
+        }
+        
+        // Configure audio input for command listening
+        let inputNode = commandAudioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        print("🎤 Command listening audio format: sampleRate=\(recordingFormat.sampleRate), channels=\(recordingFormat.channelCount)")
+        
+        guard recordingFormat.sampleRate > 0 && recordingFormat.channelCount > 0 else {
+            print("🎤 Invalid audio format for command listening")
+            return
+        }
+        
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+            commandRecognitionRequest.append(buffer)
+        }
+        print("🎤 Command listening audio tap installed")
+        
+        // Start command audio engine
+        do {
+            commandAudioEngine.prepare()
+            try commandAudioEngine.start()
+            isListeningForCommands = true
+            print("🎤 Command listening audio engine started, isListeningForCommands = \(isListeningForCommands)")
+        } catch {
+            print("🎤 Failed to start command listening audio engine: \(error)")
+            stopListeningForCommands()
+        }
+    }
+    
+    func stopListeningForCommands() {
+        print("🎤 Stopping always-on voice command listening...")
+        guard isListeningForCommands else { return }
+        
+        commandRecognitionTask?.cancel()
+        commandRecognitionTask = nil
+        commandRecognitionRequest = nil
+        
+        commandAudioEngine.stop()
+        commandAudioEngine.inputNode.removeTap(onBus: 0)
+        
+        isListeningForCommands = false
+        commandCompletion = nil
+        print("🎤 Command listening stopped")
     }
     
     // MARK: - Voice Commands

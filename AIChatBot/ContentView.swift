@@ -261,6 +261,8 @@ struct ContentView: View {
         }
         .onAppear {
             voiceManager.requestPermissions()
+            // Start always-on voice command listening
+            startAlwaysOnVoiceCommands()
         }
     }
     
@@ -271,8 +273,18 @@ struct ContentView: View {
             return "🔊 Speaking..."
         } else if aiService.isProcessing {
             return "💭 Thinking..."
+        } else if voiceManager.isListeningForCommands {
+            return "👂 Listening for commands..."
         } else {
             return "Tap 🎤 to speak"
+        }
+    }
+    
+    private func startAlwaysOnVoiceCommands() {
+        print("🎤 Starting always-on voice commands...")
+        voiceManager.startListeningForCommands { command in
+            print("🎤 Always-on voice command received: '\(command)'")
+            processVoiceInput(command)
         }
     }
 
