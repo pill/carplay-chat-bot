@@ -104,6 +104,14 @@ class AIService: ObservableObject {
         setupDefaultChat()
     }
     
+    func startAIProcessing() {
+        isProcessing = true
+    }
+    
+    func stopAIProcessing() {
+        isProcessing = false
+    }
+    
     func getRecentChats() -> [ChatSession] {
         // In a real app, this would load from persistent storage
         let recentChats = [
@@ -153,7 +161,7 @@ class AIService: ObservableObject {
         let requestBody = PerplexityRequest(
             model: "sonar",
             messages: [
-                PerplexityMessage(role: "system", content: "Please provide concise, helpful answers in exactly 3 sentences or less. Be direct and to the point."),
+                PerplexityMessage(role: "system", content: "Please provide concise, helpful answers in exactly 3 sentences or less. Be direct and to the point. Do not include footnotes, citations, or reference numbers in your response."),
                 PerplexityMessage(role: "user", content: message)
             ],
             max_tokens: 300,

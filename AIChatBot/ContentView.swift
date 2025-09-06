@@ -106,7 +106,12 @@ struct ContentView: View {
                                         proxy.scrollTo(lastMessage.id, anchor: .bottom)
                                         // Auto-speak AI responses
                                         if lastMessage.isFromAI && lastMessage.content != lastSpokenMessage {
-                                            voiceManager.speak(lastMessage.content)
+                                            voiceManager.speak(lastMessage.content) {
+                                                // Restart command listening after AI response
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                                    self.restartAlwaysOnVoiceCommands()
+                                                }
+                                            }
                                             lastSpokenMessage = lastMessage.content
                                         }
                                     } else {
@@ -261,6 +266,8 @@ struct ContentView: View {
         }
         .onAppear {
             voiceManager.requestPermissions()
+            // Start always-on voice command listening
+            startAlwaysOnVoiceCommands()
         }
     }
     
@@ -271,40 +278,90 @@ struct ContentView: View {
             return "🔊 Speaking..."
         } else if aiService.isProcessing {
             return "💭 Thinking..."
+        } else if voiceManager.isListeningForCommands {
+            return "👂 Listening for commands..."
         } else {
             return "Tap 🎤 to speak"
         }
     }
+    
+    private func startAlwaysOnVoiceCommands() {
+        print("🎤 Starting always-on voice commands...")
+        voiceManager.startListeningForCommands { command in
+            print("🎤 Always-on voice command received: '\(command)'")
+            processVoiceInput(command)
+            
+            // Only restart command listening if we're not starting regular recording
+            if !command.lowercased().contains("start ai") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.restartAlwaysOnVoiceCommands()
+                }
+            }
+        }
+    }
+    
+    private func restartAlwaysOnVoiceCommands() {
+        print("🎤 Restarting always-on voice commands...")
+        // Use a fresh start instead of restart to avoid any state issues
+        startAlwaysOnVoiceCommands()
+        print("🎤 Command listening restart initiated")
+    }
 
     private func startVoiceInput() {
+        print("🎤 startVoiceInput() called")
         voiceInput = ""
+        
+        // Stop command listening when starting regular recording
+        voiceManager.stopListeningForCommands()
+        
         voiceManager.startRecording { transcription in
             DispatchQueue.main.async {
+                print("🎤 Voice transcription: '\(transcription)'")
                 voiceInput = transcription
             }
         }
         
         // Auto-stop recording after 5 seconds of silence
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            print("🎤 Auto-stop check: isRecording=\(voiceManager.isRecording), voiceInput='\(voiceInput)'")
             if voiceManager.isRecording && !voiceInput.isEmpty {
+                print("🎤 Auto-stopping recording and processing input")
                 voiceManager.stopRecording()
                 processVoiceInput(voiceInput)
+                
+                // Restart command listening after processing voice input
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    print("🎤 Restarting command listening after voice input processing")
+                    self.restartAlwaysOnVoiceCommands()
+                }
+            } else if voiceManager.isRecording {
+                // If recording but no input, just stop and restart command listening
+                print("🎤 Auto-stopping recording with no input")
+                voiceManager.stopRecording()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    print("🎤 Restarting command listening after no input")
+                    self.restartAlwaysOnVoiceCommands()
+                }
             }
         }
     }
 
     private func processVoiceInput(_ input: String) {
+        print("🎤 Processing voice input: '\(input)'")
         // Check for voice commands first
         if let command = voiceManager.processVoiceCommand(input) {
+            print("🎤 Recognized voice command: \(command)")
             handleVoiceCommand(command)
         } else if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             // Treat as regular message
+            print("🎤 Treating as regular message")
             messageText = input
             sendMessage()
         }
     }
 
     private func handleVoiceCommand(_ command: VoiceCommand) {
+        print("🎤 Voice command received: \(command)")
         switch command {
         case .stop:
             voiceManager.stopSpeaking()
@@ -312,14 +369,35 @@ struct ContentView: View {
             voiceManager.continueSpeaking()
         case .`repeat`:
             if let lastMessage = aiService.chatHistory.last, lastMessage.isFromAI {
-                voiceManager.speak(lastMessage.content)
+                voiceManager.speak(lastMessage.content) {
+                    // Restart command listening after repeating message
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.restartAlwaysOnVoiceCommands()
+                    }
+                }
             }
         case .newChat:
             aiService.startNewChat()
             voiceManager.stopSpeaking()
+        case .startAI:
+            print("🎤 Starting voice input...")
+            startVoiceInput()
+        case .stopAI:
+            aiService.stopAIProcessing()
+            voiceManager.speak("AI processing stopped") {
+                // Restart command listening after speaking
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.restartAlwaysOnVoiceCommands()
+                }
+            }
         case .help:
-            let helpMessage = "I can respond to voice commands like 'stop', 'repeat', 'new chat', or you can ask me questions directly."
-            voiceManager.speak(helpMessage)
+            let helpMessage = "I can respond to voice commands like 'stop', 'repeat', 'new chat', 'start AI' to begin voice recording, 'stop AI' to stop processing, or you can ask me questions directly."
+            voiceManager.speak(helpMessage) {
+                // Restart command listening after help message
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.restartAlwaysOnVoiceCommands()
+                }
+            }
         }
     }
     
