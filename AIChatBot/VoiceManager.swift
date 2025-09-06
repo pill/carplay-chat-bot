@@ -18,6 +18,7 @@ class VoiceManager: NSObject, ObservableObject {
     private var commandRecognitionTask: SFSpeechRecognitionTask?
     private let commandAudioEngine = AVAudioEngine()
     private var commandCompletion: ((String) -> Void)?
+    private var isCommandListeningMode = false
     
     private let synthesizer = AVSpeechSynthesizer()
     
@@ -62,6 +63,16 @@ class VoiceManager: NSObject, ObservableObject {
         stopRecording()
         stopListeningForCommands()
         
+        // Wait a bit for the speech recognition service to reset
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.startRecordingInternal(completion: completion)
+        }
+    }
+    
+    private func startRecordingInternal(completion: @escaping (String) -> Void) {
+        print("🎤 Starting internal voice recording...")
+        isCommandListeningMode = false
+        
         // Configure audio session for iOS Simulator compatibility
         do {
             let audioSession = AVAudioSession.sharedInstance()
@@ -97,6 +108,16 @@ class VoiceManager: NSObject, ObservableObject {
                 
                 if let error = error {
                     print("🎤 Speech recognition error: \(error)")
+                    // Handle specific error codes
+                    if let nsError = error as NSError? {
+                        switch nsError.code {
+                        case 1101: // Speech recognition service unavailable
+                            print("🎤 Speech recognition service unavailable, retrying...")
+                            // Don't stop recording, just log the error
+                        default:
+                            print("🎤 Other speech recognition error: \(nsError.localizedDescription)")
+                        }
+                    }
                 }
                 
                 if error != nil || isFinal {
@@ -222,6 +243,16 @@ class VoiceManager: NSObject, ObservableObject {
         commandCompletion = completion
         stopListeningForCommands() // Stop any existing command listening
         
+        // Wait a bit for the speech recognition service to reset
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.startListeningForCommandsInternal(completion: completion)
+        }
+    }
+    
+    private func startListeningForCommandsInternal(completion: @escaping (String) -> Void) {
+        print("🎤 Starting internal command listening...")
+        isCommandListeningMode = true
+        
         // Configure audio session
         do {
             let audioSession = AVAudioSession.sharedInstance()
@@ -268,6 +299,9 @@ class VoiceManager: NSObject, ObservableObject {
                     // Handle specific error codes gracefully
                     if let nsError = error as NSError? {
                         switch nsError.code {
+                        case 1101: // Speech recognition service unavailable
+                            print("🎤 Speech recognition service unavailable, continuing to listen...")
+                            // Don't stop listening, just continue
                         case 1110: // No speech detected
                             print("🎤 No speech detected, continuing to listen...")
                             // Don't stop listening, just continue
