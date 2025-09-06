@@ -4,12 +4,13 @@ import Combine
 class AIService: ObservableObject {
     @Published var chatHistory: [ChatMessage] = []
     @Published var isProcessing = false
-    @Published var currentProvider: AIProvider = .claude
+    @Published var currentProvider: AIProvider = .perplexity
     
     private var cancellables = Set<AnyCancellable>()
     private var apiKey: String?
     
     enum AIProvider: String, CaseIterable {
+        case perplexity = "Perplexity"
         case claude = "Claude"
         case gpt = "GPT"
         case gemini = "Gemini"
@@ -25,9 +26,19 @@ class AIService: ObservableObject {
     }
     
     private func loadAPIKey() {
-        // In a real app, this would load from Keychain or secure storage
-        // For demo purposes, we'll use a placeholder
-        apiKey = UserDefaults.standard.string(forKey: "AI_API_KEY")
+        // Try to load API key from secure storage
+        apiKey = Config.perplexityAPIKey
+        
+        // If no API key is found in secure storage, initialize it with the default one
+        if apiKey == nil && !Config.isPerplexityConfigured {
+            let defaultKey = "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"
+            if Config.setupPerplexityAPIKey(defaultKey) {
+                apiKey = defaultKey
+                print("✅ API key successfully stored in Keychain")
+            } else {
+                print("❌ Failed to store API key in Keychain")
+            }
+        }
     }
     
     private func setupDefaultChat() {
@@ -71,63 +82,21 @@ class AIService: ObservableObject {
         }
     }
     
-    private func callPerplexityAPI(message: String) async throws -> String {
-        let url = URL(string: "\(Config.perplexityBaseURL)/chat/completions")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(Config.perplexityAPIKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let requestBody = PerplexityRequest(
-            model: "sonar",
-            messages: [
-                PerplexityMessage(role: "user", content: message)
-            ],
-            max_tokens: 1000,
-            temperature: 0.7,
-            stream: false
-        )
-        
-        do {
-            request.httpBody = try JSONEncoder().encode(requestBody)
-            
-            print("Making Perplexity API request to: \(url)")
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw AIError.networkError
-            }
-            
-            guard httpResponse.statusCode == 200 else {
-                let errorString = String(data: data, encoding: .utf8) ?? "Unknown error"
-                print("Perplexity API Error (\(httpResponse.statusCode)): \(errorString)")
-                
-                switch httpResponse.statusCode {
-                case 500, 502, 503, 504:
-                    throw AIError.serverError
-                case 429:
-                    throw AIError.rateLimitExceeded
-                default:
-                    throw AIError.networkError
-                }
-            }
-            
-            let perplexityResponse = try JSONDecoder().decode(PerplexityResponse.self, from: data)
-            
-            return perplexityResponse.choices.first?.message.content ?? "I couldn't generate a response. Please try again."
-            
-        } catch let error as AIError {
-            throw error
-        } catch {
-            throw AIError.networkError
-        }
-    }
-    
     private func generateAIResponse(for message: String) async -> String {
-        // Fallback method - kept for backward compatibility
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-        return "I'm having trouble connecting to the AI service. Please try again."
+        do {
+            switch currentProvider {
+            case .perplexity:
+                return try await callPerplexityAPI(message: message)
+            case .claude:
+                return try await callClaudeAPI(message: message)
+            case .gpt:
+                return try await callGPTAPI(message: message)
+            case .gemini:
+                return try await callGeminiAPI(message: message)
+            }
+        } catch {
+            return "I apologize, but I encountered an error: \(error.localizedDescription). Please try again."
+        }
     }
     
     func startNewChat() {
@@ -168,7 +137,74 @@ class AIService: ObservableObject {
         UserDefaults.standard.set(key, forKey: "AI_API_KEY")
     }
     
-    // MARK: - Real API Integration Methods (to be implemented)
+    // MARK: - Real API Integration Methods
+    
+    private func callPerplexityAPI(message: String) async throws -> String {
+        guard let apiKey = apiKey else {
+            throw AIError.invalidAPIKey
+        }
+        
+        let url = URL(string: "\(Config.perplexityBaseURL)/chat/completions")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let requestBody = PerplexityRequest(
+            model: "sonar",
+            messages: [
+                PerplexityMessage(role: "user", content: message)
+            ],
+            max_tokens: 1000,
+            temperature: 0.7,
+            stream: false
+        )
+        
+        do {
+            request.httpBody = try JSONEncoder().encode(requestBody)
+            
+            // Debug logging
+            print("Making Perplexity API request to: \(url)")
+            print("Request body: \(String(data: request.httpBody!, encoding: .utf8) ?? "Failed to encode")")
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw AIError.networkError
+            }
+            
+            if httpResponse.statusCode == 429 {
+                throw AIError.rateLimitExceeded
+            }
+            
+            guard httpResponse.statusCode == 200 else {
+                // Log the response for debugging
+                let errorString = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("Perplexity API Error (\(httpResponse.statusCode)): \(errorString)")
+                
+                // Handle specific error codes
+                switch httpResponse.statusCode {
+                case 500, 502, 503, 504:
+                    throw AIError.serverError
+                case 429:
+                    throw AIError.rateLimitExceeded
+                case 401, 403:
+                    throw AIError.invalidAPIKey
+                default:
+                    throw AIError.networkError
+                }
+            }
+            
+            let perplexityResponse = try JSONDecoder().decode(PerplexityResponse.self, from: data)
+            
+            return perplexityResponse.choices.first?.message.content ?? "I couldn't generate a response. Please try again."
+            
+        } catch let error as AIError {
+            throw error
+        } catch {
+            throw AIError.networkError
+        }
+    }
     
     private func callClaudeAPI(message: String) async throws -> String {
         // Implement Claude API call

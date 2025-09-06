@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		14B6EC492C719B8A0071C47B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F0E0A562C719B8A0071C47B /* SettingsView.swift */; };
+		174EF9692C719B8A0071C47B /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB7ABFF2C719B8A0071C47B /* AIService.swift */; };
+		199ECFA62C719B8A0071C47B /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40A07112C719B8A0071C47B /* KeychainManager.swift */; };
+		65C90A372C719B8A0071C47B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1913BBA2C719B8A0071C47B /* Config.swift */; };
 		7A92BA112C719B8A0071C47B /* AIChatBotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA102C719B8A0071C47B /* AIChatBotApp.swift */; };
 		7A92BA132C719B8A0071C47B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA122C719B8A0071C47B /* ContentView.swift */; };
 		7A92BA152C719B8C0071C47B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7A92BA142C719B8C0071C47B /* Assets.xcassets */; };
@@ -19,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6DB7ABFF2C719B8A0071C47B /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
 		7A92BA0D2C719B8A0071C47B /* AIChatBot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AIChatBot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A92BA102C719B8A0071C47B /* AIChatBotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatBotApp.swift; sourceTree = "<group>"; };
 		7A92BA122C719B8A0071C47B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -30,6 +35,9 @@
 		7A92BA282C719B8C0071C47B /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		7A92BA2A2C719B8C0071C47B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7A92BA2B2C719B8C0071C47B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		7F0E0A562C719B8A0071C47B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A1913BBA2C719B8A0071C47B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		B40A07112C719B8A0071C47B /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +78,10 @@
 				7A92BA282C719B8C0071C47B /* ChatViewController.swift */,
 				7A92BA2B2C719B8C0071C47B /* Config.swift */,
 				7A92BA2A2C719B8C0071C47B /* Info.plist */,
+				7F0E0A562C719B8A0071C47B /* SettingsView.swift */,
+				6DB7ABFF2C719B8A0071C47B /* AIService.swift */,
+				A1913BBA2C719B8A0071C47B /* Config.swift */,
+				B40A07112C719B8A0071C47B /* KeychainManager.swift */,
 				7A92BA142C719B8C0071C47B /* Assets.xcassets */,
 				7A92BA162C719B8C0071C47B /* Preview Content */,
 			);
@@ -155,6 +167,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A92BA132C719B8A0071C47B /* ContentView.swift in Sources */,
+				14B6EC492C719B8A0071C47B /* SettingsView.swift in Sources */,
+				174EF9692C719B8A0071C47B /* AIService.swift in Sources */,
+				199ECFA62C719B8A0071C47B /* KeychainManager.swift in Sources */,
+				65C90A372C719B8A0071C47B /* Config.swift in Sources */,
 				7A92BA112C719B8A0071C47B /* AIChatBotApp.swift in Sources */,
 				7A92BA212C719B8C0071C47B /* AIService.swift in Sources */,
 				7A92BA232C719B8C0071C47B /* VoiceManager.swift in Sources */,
