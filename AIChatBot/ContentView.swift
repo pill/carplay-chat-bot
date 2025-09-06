@@ -277,16 +277,20 @@ struct ContentView: View {
     }
 
     private func startVoiceInput() {
+        print("🎤 startVoiceInput() called")
         voiceInput = ""
         voiceManager.startRecording { transcription in
             DispatchQueue.main.async {
+                print("🎤 Voice transcription: '\(transcription)'")
                 voiceInput = transcription
             }
         }
         
         // Auto-stop recording after 5 seconds of silence
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            print("🎤 Auto-stop check: isRecording=\(voiceManager.isRecording), voiceInput='\(voiceInput)'")
             if voiceManager.isRecording && !voiceInput.isEmpty {
+                print("🎤 Auto-stopping recording and processing input")
                 voiceManager.stopRecording()
                 processVoiceInput(voiceInput)
             }
@@ -294,17 +298,21 @@ struct ContentView: View {
     }
 
     private func processVoiceInput(_ input: String) {
+        print("🎤 Processing voice input: '\(input)'")
         // Check for voice commands first
         if let command = voiceManager.processVoiceCommand(input) {
+            print("🎤 Recognized voice command: \(command)")
             handleVoiceCommand(command)
         } else if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             // Treat as regular message
+            print("🎤 Treating as regular message")
             messageText = input
             sendMessage()
         }
     }
 
     private func handleVoiceCommand(_ command: VoiceCommand) {
+        print("🎤 Voice command received: \(command)")
         switch command {
         case .stop:
             voiceManager.stopSpeaking()
@@ -318,6 +326,7 @@ struct ContentView: View {
             aiService.startNewChat()
             voiceManager.stopSpeaking()
         case .startAI:
+            print("🎤 Starting voice input...")
             startVoiceInput()
         case .stopAI:
             aiService.stopAIProcessing()
