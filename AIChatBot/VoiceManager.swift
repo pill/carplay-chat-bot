@@ -258,7 +258,20 @@ class VoiceManager: NSObject, ObservableObject {
                 
                 if let error = error {
                     print("🎤 Command listening error: \(error)")
-                    // Don't stop listening on error, just log it
+                    // Handle specific error codes gracefully
+                    if let nsError = error as NSError? {
+                        switch nsError.code {
+                        case 1110: // No speech detected
+                            print("🎤 No speech detected, continuing to listen...")
+                            // Don't stop listening, just continue
+                        case 1111: // Speech recognition not available
+                            print("🎤 Speech recognition not available, stopping command listening")
+                            self?.stopListeningForCommands()
+                        default:
+                            print("🎤 Other speech recognition error: \(nsError.localizedDescription)")
+                            // Don't stop listening on other errors
+                        }
+                    }
                 }
             }
         }
@@ -304,6 +317,19 @@ class VoiceManager: NSObject, ObservableObject {
         isListeningForCommands = false
         commandCompletion = nil
         print("🎤 Command listening stopped")
+    }
+    
+    func restartCommandListening() {
+        print("🎤 Restarting command listening...")
+        guard let completion = commandCompletion else {
+            print("🎤 No command completion handler available")
+            return
+        }
+        
+        stopListeningForCommands()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.startListeningForCommands(completion: completion)
+        }
     }
     
     // MARK: - Voice Commands

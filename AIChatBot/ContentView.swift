@@ -285,6 +285,11 @@ struct ContentView: View {
         voiceManager.startListeningForCommands { command in
             print("🎤 Always-on voice command received: '\(command)'")
             processVoiceInput(command)
+            
+            // Restart command listening after processing a command
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.voiceManager.restartCommandListening()
+            }
         }
     }
 
