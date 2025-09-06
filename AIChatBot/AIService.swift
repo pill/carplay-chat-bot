@@ -62,8 +62,13 @@ class AIService: ObservableObject {
             isProcessing = true
         }
         
-        // Simulate AI response (replace with actual API call)
-        let response = await generateAIResponse(for: message)
+        // Call Perplexity API
+        let response: String
+        do {
+            response = try await callPerplexityAPI(message: message)
+        } catch {
+            response = "I apologize, but I encountered an error: \(error.localizedDescription). Please try again."
+        }
         
         let aiMessage = ChatMessage(
             content: response,
@@ -254,7 +259,7 @@ enum AIError: Error, LocalizedError {
         case .rateLimitExceeded:
             return "Rate limit exceeded. Please try again later."
         case .serverError:
-            return "Server is temporarily unavailable. Please try again in a few minutes."
+            return "The AI service is temporarily unavailable. Please try again later."
         }
     }
 }
