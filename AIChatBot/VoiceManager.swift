@@ -198,6 +198,10 @@ class VoiceManager: NSObject, ObservableObject {
             return .newChat
         } else if lowercasedCommand.contains("help") {
             return .help
+        } else if lowercasedCommand.contains("start ai") || lowercasedCommand.contains("start processing") || lowercasedCommand.contains("begin ai") {
+            return .startAI
+        } else if lowercasedCommand.contains("stop ai") || lowercasedCommand.contains("stop processing") || lowercasedCommand.contains("cancel ai") {
+            return .stopAI
         }
         
         return nil
@@ -234,6 +238,8 @@ enum VoiceCommand {
     case `repeat`
     case newChat
     case help
+    case startAI
+    case stopAI
     
     var description: String {
         switch self {
@@ -247,6 +253,10 @@ enum VoiceCommand {
             return "Start new chat"
         case .help:
             return "Show help"
+        case .startAI:
+            return "Start AI processing"
+        case .stopAI:
+            return "Stop AI processing"
         }
     }
 } 

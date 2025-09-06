@@ -104,6 +104,14 @@ class AIService: ObservableObject {
         setupDefaultChat()
     }
     
+    func startAIProcessing() {
+        isProcessing = true
+    }
+    
+    func stopAIProcessing() {
+        isProcessing = false
+    }
+    
     func getRecentChats() -> [ChatSession] {
         // In a real app, this would load from persistent storage
         let recentChats = [

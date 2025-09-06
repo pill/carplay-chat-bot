@@ -317,8 +317,14 @@ struct ContentView: View {
         case .newChat:
             aiService.startNewChat()
             voiceManager.stopSpeaking()
+        case .startAI:
+            aiService.startAIProcessing()
+            voiceManager.speak("AI processing started")
+        case .stopAI:
+            aiService.stopAIProcessing()
+            voiceManager.speak("AI processing stopped")
         case .help:
-            let helpMessage = "I can respond to voice commands like 'stop', 'repeat', 'new chat', or you can ask me questions directly."
+            let helpMessage = "I can respond to voice commands like 'stop', 'repeat', 'new chat', 'start AI', 'stop AI', or you can ask me questions directly."
             voiceManager.speak(helpMessage)
         }
     }
