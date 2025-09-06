@@ -52,10 +52,11 @@ class VoiceManager: NSObject, ObservableObject {
         // Stop any existing recording
         stopRecording()
         
-        // Configure audio session
+        // Configure audio session for iOS Simulator compatibility
         do {
-            try AVAudioSession.sharedInstance().setCategory(.record, mode: .measurement, options: .duckOthers)
-            try AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
             print("Failed to set up audio session: \(error)")
             return
@@ -72,22 +73,30 @@ class VoiceManager: NSObject, ObservableObject {
         
         // Start recognition task
         recognitionTask = speechRecognizer?.recognitionTask(with: recognitionRequest) { [weak self] result, error in
-            var isFinal = false
-            
-            if let result = result {
-                let transcribedText = result.bestTranscription.formattedString
-                completion(transcribedText)
-                isFinal = result.isFinal
-            }
-            
-            if error != nil || isFinal {
-                self?.stopRecording()
+            DispatchQueue.main.async {
+                var isFinal = false
+                
+                if let result = result {
+                    let transcribedText = result.bestTranscription.formattedString
+                    completion(transcribedText)
+                    isFinal = result.isFinal
+                }
+                
+                if error != nil || isFinal {
+                    self?.stopRecording()
+                }
             }
         }
         
-        // Configure audio input
+        // Configure audio input with safer format handling
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
+        
+        // Validate format before using
+        guard recordingFormat.sampleRate > 0 && recordingFormat.channelCount > 0 else {
+            print("Invalid audio format: sampleRate=\(recordingFormat.sampleRate), channels=\(recordingFormat.channelCount)")
+            return
+        }
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
             recognitionRequest.append(buffer)
@@ -105,6 +114,8 @@ class VoiceManager: NSObject, ObservableObject {
     }
     
     func stopRecording() {
+        guard isRecording else { return }
+        
         audioEngine.stop()
         audioEngine.inputNode.removeTap(onBus: 0)
         recognitionRequest?.endAudio()
@@ -115,10 +126,12 @@ class VoiceManager: NSObject, ObservableObject {
         isRecording = false
         
         // Reset audio session
-        do {
-            try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        } catch {
-            print("Failed to deactivate audio session: \(error)")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            do {
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            } catch {
+                print("Failed to deactivate audio session: \(error)")
+            }
         }
     }
     
@@ -128,6 +141,15 @@ class VoiceManager: NSObject, ObservableObject {
         // Stop any current speech
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
+        }
+        
+        // Configure audio session for speech synthesis
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("Failed to set up audio session for speech: \(error)")
         }
         
         // Create utterance
@@ -171,7 +193,7 @@ class VoiceManager: NSObject, ObservableObject {
         } else if lowercasedCommand.contains("continue") || lowercasedCommand.contains("resume") {
             return .continue
         } else if lowercasedCommand.contains("repeat") {
-            return .repeat
+            return .`repeat`
         } else if lowercasedCommand.contains("new chat") || lowercasedCommand.contains("start over") {
             return .newChat
         } else if lowercasedCommand.contains("help") {
@@ -209,7 +231,7 @@ extension VoiceManager: AVSpeechSynthesizerDelegate {
 enum VoiceCommand {
     case stop
     case `continue`
-    case repeat
+    case `repeat`
     case newChat
     case help
     
@@ -219,7 +241,7 @@ enum VoiceCommand {
             return "Stop speaking"
         case .continue:
             return "Continue speaking"
-        case .repeat:
+        case .`repeat`:
             return "Repeat last response"
         case .newChat:
             return "Start new chat"

@@ -277,11 +277,3 @@ class CarPlayManager: NSObject {
         completion()
     }
 }
-
-// MARK: - Chat Session Model
-struct ChatSession {
-    let id: UUID
-    let title: String
-    let lastMessage: String
-    let timestamp: Date
-} 
