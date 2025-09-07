@@ -106,6 +106,9 @@ struct ContentView: View {
                                         proxy.scrollTo(lastMessage.id, anchor: .bottom)
                                         // Auto-speak AI responses
                                         if lastMessage.isFromAI && lastMessage.content != lastSpokenMessage {
+                                            // Stop command listening while speaking AI response
+                                            voiceManager.stopListeningForCommands()
+                                            
                                             voiceManager.speak(lastMessage.content) {
                                                 // Restart command listening after AI response
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -219,6 +222,10 @@ struct ContentView: View {
                             // Stop speaking button
                             Button(action: {
                                 voiceManager.stopSpeaking()
+                                // Restart command listening after stopping speech
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    self.restartAlwaysOnVoiceCommands()
+                                }
                             }) {
                                 Image(systemName: "speaker.slash")
                                     .font(.title2)
@@ -266,8 +273,28 @@ struct ContentView: View {
         }
         .onAppear {
             voiceManager.requestPermissions()
-            // Start always-on voice command listening
-            startAlwaysOnVoiceCommands()
+            // Start command listening after a delay to allow permissions to be granted
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                if voiceManager.hasPermission {
+                    startAlwaysOnVoiceCommands()
+                } else {
+                    // Try again after another delay if permissions still pending
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        if voiceManager.hasPermission {
+                            startAlwaysOnVoiceCommands()
+                        } else {
+                            print("🎤 Voice permissions not granted, command listening disabled")
+                        }
+                    }
+                }
+            }
+        }
+        .onChange(of: voiceManager.hasPermission) { hasPermission in
+            // Start command listening when permissions are granted
+            if hasPermission && !voiceManager.isListeningForCommands {
+                print("🎤 Permissions granted, starting command listening")
+                startAlwaysOnVoiceCommands()
+            }
         }
     }
     
@@ -316,35 +343,45 @@ struct ContentView: View {
         
         voiceManager.startRecording { transcription in
             DispatchQueue.main.async {
-                print("🎤 Voice transcription: '\(transcription)'")
-                voiceInput = transcription
+                print("🎤 Voice recording completed with final transcription: '\(transcription)'")
+                self.voiceInput = transcription
+                
+                // Process the input once when recording completes
+                if !transcription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    self.processVoiceInput(transcription)
+                    
+                    // Restart command listening after processing
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        print("🎤 Restarting command listening after voice input processing")
+                        self.restartAlwaysOnVoiceCommands()
+                    }
+                } else {
+                    // Even with empty transcription, restart command listening
+                    print("🎤 Voice recording completed with empty transcription")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        print("🎤 Restarting command listening after empty voice input")
+                        self.restartAlwaysOnVoiceCommands()
+                    }
+                }
             }
         }
         
-        // Auto-stop recording after 5 seconds of silence
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            print("🎤 Auto-stop check: isRecording=\(voiceManager.isRecording), voiceInput='\(voiceInput)'")
-            if voiceManager.isRecording && !voiceInput.isEmpty {
-                print("🎤 Auto-stopping recording and processing input")
+        // Maximum safety timeout after 15 seconds (silence detection should stop it earlier)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+            print("🎤 Maximum safety timeout reached: isRecording=\(voiceManager.isRecording)")
+            if voiceManager.isRecording {
+                print("🎤 Safety timeout - forcing stop of recording")
                 voiceManager.stopRecording()
-                processVoiceInput(voiceInput)
                 
-                // Restart command listening after processing voice input
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    print("🎤 Restarting command listening after voice input processing")
-                    self.restartAlwaysOnVoiceCommands()
-                }
-            } else if voiceManager.isRecording {
-                // If recording but no input, just stop and restart command listening
-                print("🎤 Auto-stopping recording with no input")
-                voiceManager.stopRecording()
+                // Ensure command listening is restarted even after safety timeout
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    print("🎤 Restarting command listening after no input")
+                    print("🎤 Restarting command listening after safety timeout")
                     self.restartAlwaysOnVoiceCommands()
                 }
             }
         }
     }
+    
 
     private func processVoiceInput(_ input: String) {
         print("🎤 Processing voice input: '\(input)'")
@@ -365,10 +402,17 @@ struct ContentView: View {
         switch command {
         case .stop:
             voiceManager.stopSpeaking()
+            // Restart command listening after stopping speech
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.restartAlwaysOnVoiceCommands()
+            }
         case .continue:
             voiceManager.continueSpeaking()
         case .`repeat`:
             if let lastMessage = aiService.chatHistory.last, lastMessage.isFromAI {
+                // Stop command listening while speaking
+                voiceManager.stopListeningForCommands()
+                
                 voiceManager.speak(lastMessage.content) {
                     // Restart command listening after repeating message
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -384,6 +428,9 @@ struct ContentView: View {
             startVoiceInput()
         case .stopAI:
             aiService.stopAIProcessing()
+            // Stop command listening while speaking
+            voiceManager.stopListeningForCommands()
+            
             voiceManager.speak("AI processing stopped") {
                 // Restart command listening after speaking
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -392,6 +439,9 @@ struct ContentView: View {
             }
         case .help:
             let helpMessage = "I can respond to voice commands like 'stop', 'repeat', 'new chat', 'start AI' to begin voice recording, 'stop AI' to stop processing, or you can ask me questions directly."
+            // Stop command listening while speaking
+            voiceManager.stopListeningForCommands()
+            
             voiceManager.speak(helpMessage) {
                 // Restart command listening after help message
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
