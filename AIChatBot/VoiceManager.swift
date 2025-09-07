@@ -19,6 +19,16 @@ class VoiceManager: NSObject, ObservableObject {
     private var isAlwaysOnListening = false
     private var speechCompletion: (() -> Void)?
     
+    // Silence detection
+    private var silenceDetectionTimer: Timer?
+    private var lastSpeechTime: Date?
+    private let silenceThreshold: TimeInterval = 3.0 // 3 seconds of silence
+    private let audioLevelThreshold: Float = -40.0 // dB threshold for silence
+    
+    // Current transcription and completion handler
+    private var currentTranscription: String = ""
+    private var recordingCompletion: ((String) -> Void)?
+    
     private let synthesizer = AVSpeechSynthesizer()
     
     // Helper method to safely remove audio tap
@@ -57,24 +67,27 @@ class VoiceManager: NSObject, ObservableObject {
     func requestPermissions() {
         SFSpeechRecognizer.requestAuthorization { [weak self] status in
             DispatchQueue.main.async {
-                self?.hasPermission = status == .authorized
+                self?.updatePermissionStatus()
             }
         }
         
         AVAudioSession.sharedInstance().requestRecordPermission { [weak self] granted in
             DispatchQueue.main.async {
-                if granted {
-                    self?.hasPermission = self?.hasPermission ?? false && granted
-                }
+                self?.updatePermissionStatus()
             }
         }
     }
     
-    private func checkPermissions() {
+    private func updatePermissionStatus() {
         let speechStatus = SFSpeechRecognizer.authorizationStatus()
         let audioStatus = AVAudioSession.sharedInstance().recordPermission
         
         hasPermission = speechStatus == .authorized && audioStatus == .granted
+        print("🎤 Permission status updated: speech=\(speechStatus.rawValue), audio=\(audioStatus.rawValue), hasPermission=\(hasPermission)")
+    }
+    
+    private func checkPermissions() {
+        updatePermissionStatus()
     }
     
     func startRecording(completion: @escaping (String) -> Void) {
@@ -99,6 +112,10 @@ class VoiceManager: NSObject, ObservableObject {
         print("🎤 Starting internal voice recording...")
         isCommandListeningMode = false
         isAlwaysOnListening = false
+        
+        // Store the completion handler and reset transcription
+        recordingCompletion = completion
+        currentTranscription = ""
         
         // Configure audio session for iOS Simulator compatibility
         do {
@@ -145,8 +162,8 @@ class VoiceManager: NSObject, ObservableObject {
                             print("🎤 Final result but not a voice command, continuing to listen...")
                         }
                     } else {
-                        // Regular recording mode
-                        completion(transcribedText)
+                        // Regular recording mode - store current transcription but don't call completion yet
+                        self?.currentTranscription = transcribedText
                         isFinal = result.isFinal
                     }
                 }
@@ -191,9 +208,12 @@ class VoiceManager: NSObject, ObservableObject {
             return
         }
         
-        // Safely install audio tap
-        guard safelyInstallAudioTap(format: recordingFormat, bufferSize: 1024, block: { buffer, _ in
+        // Safely install audio tap with silence detection
+        guard safelyInstallAudioTap(format: recordingFormat, bufferSize: 1024, block: { [weak self] buffer, _ in
             recognitionRequest.append(buffer)
+            
+            // Check audio level for silence detection
+            self?.checkAudioLevel(buffer: buffer)
         }) else {
             print("🎤 Failed to install audio tap, stopping recording")
             stopRecording()
@@ -205,6 +225,11 @@ class VoiceManager: NSObject, ObservableObject {
             audioEngine.prepare()
             try audioEngine.start()
             isRecording = true
+            
+            // Initialize silence detection
+            lastSpeechTime = Date()
+            startSilenceDetection()
+            
             print("🎤 Audio engine started successfully, isRecording = \(isRecording)")
         } catch {
             print("🎤 Failed to start audio engine: \(error)")
@@ -228,8 +253,19 @@ class VoiceManager: NSObject, ObservableObject {
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
         
+        // Stop silence detection
+        stopSilenceDetection()
+        
+        // Call completion with current transcription (even if empty) when not in command mode
+        if !isCommandListeningMode {
+            print("🎤 Calling completion with transcription: '\(currentTranscription)' (empty: \(currentTranscription.isEmpty))")
+            recordingCompletion?(currentTranscription)
+        }
+        
         recognitionRequest = nil
         recognitionTask = nil
+        recordingCompletion = nil
+        currentTranscription = ""
         isRecording = false
         print("🎤 Voice recording stopped successfully")
         
@@ -508,6 +544,58 @@ class VoiceManager: NSObject, ObservableObject {
         
         print("🎤 No voice command recognized")
         return nil
+    }
+    
+    // MARK: - Silence Detection
+    
+    private func startSilenceDetection() {
+        print("🎤 Starting silence detection")
+        silenceDetectionTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.checkForSilence()
+        }
+    }
+    
+    private func stopSilenceDetection() {
+        print("🎤 Stopping silence detection")
+        silenceDetectionTimer?.invalidate()
+        silenceDetectionTimer = nil
+        lastSpeechTime = nil
+    }
+    
+    private func checkAudioLevel(buffer: AVAudioPCMBuffer) {
+        guard let channelData = buffer.floatChannelData?[0] else { return }
+        
+        let frames = buffer.frameLength
+        var sum: Float = 0
+        
+        // Calculate RMS (Root Mean Square) for audio level
+        for i in 0..<Int(frames) {
+            let sample = channelData[i]
+            sum += sample * sample
+        }
+        
+        let rms = sqrt(sum / Float(frames))
+        let dbLevel = 20 * log10(rms)
+        
+        // If audio level is above threshold, update last speech time
+        if dbLevel > audioLevelThreshold {
+            lastSpeechTime = Date()
+        }
+    }
+    
+    private func checkForSilence() {
+        guard let lastSpeech = lastSpeechTime,
+              isRecording,
+              !isCommandListeningMode else { return }
+        
+        let silenceDuration = Date().timeIntervalSince(lastSpeech)
+        
+        if silenceDuration >= silenceThreshold {
+            print("🎤 Silence detected for \(silenceDuration) seconds, stopping recording")
+            DispatchQueue.main.async {
+                self.stopRecording()
+            }
+        }
     }
 }
 
