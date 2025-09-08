@@ -7,10 +7,47 @@ struct SettingsView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var alertTitle = ""
+    @State private var responseSentenceCount = Config.responseSentenceCount
     
     var body: some View {
         NavigationView {
             List {
+                Section("Response Settings") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Response Length")
+                                .font(.headline)
+                            Spacer()
+                            Text("\(responseSentenceCount) sentence\(responseSentenceCount == 1 ? "" : "s")")
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        HStack {
+                            Text("1")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Slider(value: Binding(
+                                get: { Double(responseSentenceCount) },
+                                set: { newValue in
+                                    let newCount = Int(newValue.rounded())
+                                    responseSentenceCount = newCount
+                                    Config.setResponseSentenceCount(responseSentenceCount)
+                                }
+                            ), in: 1...5, step: 1)
+                            
+                            Text("5")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Text("Controls how many sentences the AI will use in responses. Shorter responses are more concise.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+                
                 Section("API Configuration") {
                     HStack {
                         VStack(alignment: .leading) {

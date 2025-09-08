@@ -8,6 +8,7 @@ class AIService: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     private var apiKey: String?
+    private var currentSentenceCount: Int = Config.responseSentenceCount
     
     enum AIProvider: String, CaseIterable {
         case perplexity = "Perplexity"
@@ -23,6 +24,7 @@ class AIService: ObservableObject {
     init() {
         loadAPIKey()
         setupDefaultChat()
+        setupNotificationObservers()
     }
     
     private func loadAPIKey() {
@@ -48,6 +50,19 @@ class AIService: ObservableObject {
             timestamp: Date()
         )
         chatHistory.append(welcomeMessage)
+    }
+    
+    private func setupNotificationObservers() {
+        // Listen for sentence count changes
+        NotificationCenter.default.publisher(for: NSNotification.Name("SentenceCountChanged"))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                if let count = notification.userInfo?["count"] as? Int {
+                    print("🤖 AIService updated sentence count to: \(count)")
+                    self?.currentSentenceCount = count
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func sendMessage(_ message: String) async {
@@ -158,10 +173,14 @@ class AIService: ObservableObject {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
+        let sentenceCount = currentSentenceCount
+        print("🤖 Using \(sentenceCount) sentence\(sentenceCount == 1 ? "" : "s") for response")
+        let systemPrompt = "Please provide concise, helpful answers in exactly \(sentenceCount) sentence\(sentenceCount == 1 ? "" : "s") or less. Be direct and to the point. NEVER include any footnotes, citations, reference numbers, brackets with numbers like [1], [2], or any source references in your response. Only provide the direct answer."
+        
         let requestBody = PerplexityRequest(
             model: "sonar",
             messages: [
-                PerplexityMessage(role: "system", content: "Please provide concise, helpful answers in exactly 2 sentences or less. Be direct and to the point. NEVER include any footnotes, citations, reference numbers, brackets with numbers like [1], [2], or any source references in your response. Only provide the direct answer."),
+                PerplexityMessage(role: "system", content: systemPrompt),
                 PerplexityMessage(role: "user", content: message)
             ],
             max_tokens: 300,
