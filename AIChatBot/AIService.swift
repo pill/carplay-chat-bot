@@ -161,7 +161,7 @@ class AIService: ObservableObject {
         let requestBody = PerplexityRequest(
             model: "sonar",
             messages: [
-                PerplexityMessage(role: "system", content: "Please provide concise, helpful answers in exactly 3 sentences or less. Be direct and to the point. Do not include footnotes, citations, or reference numbers in your response."),
+                PerplexityMessage(role: "system", content: "Please provide concise, helpful answers in exactly 2 sentences or less. Be direct and to the point. NEVER include any footnotes, citations, reference numbers, brackets with numbers like [1], [2], or any source references in your response. Only provide the direct answer."),
                 PerplexityMessage(role: "user", content: message)
             ],
             max_tokens: 300,
@@ -206,7 +206,10 @@ class AIService: ObservableObject {
             
             let perplexityResponse = try JSONDecoder().decode(PerplexityResponse.self, from: data)
             
-            return perplexityResponse.choices.first?.message.content ?? "I couldn't generate a response. Please try again."
+            let rawContent = perplexityResponse.choices.first?.message.content ?? "I couldn't generate a response. Please try again."
+            
+            // Clean up any citation numbers that might have slipped through
+            return cleanupCitations(rawContent)
             
         } catch let error as AIError {
             throw error
@@ -218,19 +221,48 @@ class AIService: ObservableObject {
     private func callClaudeAPI(message: String) async throws -> String {
         // Implement Claude API call
         // This would use the actual Claude API with proper authentication
+        // When implemented, make sure to apply cleanupCitations() to the response
         throw AIError.notImplemented
     }
     
     private func callGPTAPI(message: String) async throws -> String {
         // Implement GPT API call
         // This would use the actual OpenAI API with proper authentication
+        // When implemented, make sure to apply cleanupCitations() to the response
         throw AIError.notImplemented
     }
     
     private func callGeminiAPI(message: String) async throws -> String {
         // Implement Gemini API call
         // This would use the actual Google Gemini API with proper authentication
+        // When implemented, make sure to apply cleanupCitations() to the response
         throw AIError.notImplemented
+    }
+    
+    // MARK: - Response Cleanup
+    
+    private func cleanupCitations(_ text: String) -> String {
+        var cleanedText = text
+        
+        // Remove citation numbers in brackets like [1], [2], [3], etc.
+        cleanedText = cleanedText.replacingOccurrences(of: "\\[\\d+\\]", with: "", options: .regularExpression)
+        
+        // Remove citation numbers with parentheses like (1), (2), (3), etc.
+        cleanedText = cleanedText.replacingOccurrences(of: "\\(\\d+\\)", with: "", options: .regularExpression)
+        
+        // Remove superscript numbers that might appear as citations
+        cleanedText = cleanedText.replacingOccurrences(of: "\\^\\d+", with: "", options: .regularExpression)
+        
+        // Remove any trailing citation markers at the end of sentences
+        cleanedText = cleanedText.replacingOccurrences(of: "\\s*\\[\\d+\\]\\s*", with: " ", options: .regularExpression)
+        
+        // Clean up any double spaces that might have been created
+        cleanedText = cleanedText.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
+        
+        // Trim whitespace
+        cleanedText = cleanedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        return cleanedText
     }
 }
 

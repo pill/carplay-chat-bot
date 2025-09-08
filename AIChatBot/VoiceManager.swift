@@ -62,6 +62,46 @@ class VoiceManager: NSObject, ObservableObject {
         super.init()
         synthesizer.delegate = self
         checkPermissions()
+        setupAudioSessionNotifications()
+    }
+    
+    private func setupAudioSessionNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioSessionInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func handleAudioSessionInterruption(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+        
+        print("🎤 Audio session interruption: \(type)")
+        
+        switch type {
+        case .began:
+            print("🎤 Audio session interruption began, stopping command listening")
+            if isListeningForCommands {
+                stopListeningForCommands()
+            }
+            if isRecording {
+                stopRecording()
+            }
+        case .ended:
+            print("🎤 Audio session interruption ended")
+            // Don't automatically restart here - let the app lifecycle handler do it
+        @unknown default:
+            break
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     func requestPermissions() {
