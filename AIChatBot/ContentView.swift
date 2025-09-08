@@ -296,6 +296,21 @@ struct ContentView: View {
                 startAlwaysOnVoiceCommands()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            print("🎤 App became active, checking voice command listening")
+            // Restart voice command listening if it's not active and we have permissions
+            if voiceManager.hasPermission && !voiceManager.isListeningForCommands && !voiceManager.isRecording && !voiceManager.isSpeaking {
+                print("🎤 Restarting voice command listening after app became active")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.restartAlwaysOnVoiceCommands()
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            print("🎤 App will resign active, stopping voice command listening")
+            // Stop voice command listening when app goes to background to avoid issues
+            voiceManager.stopListeningForCommands()
+        }
     }
     
     private var voiceStatusText: String {
