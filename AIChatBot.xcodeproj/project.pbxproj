@@ -172,9 +172,8 @@
 				199ECFA62C719B8A0071C47B /* KeychainManager.swift in Sources */,
 				65C90A372C719B8A0071C47B /* Config.swift in Sources */,
 				7A92BA112C719B8A0071C47B /* AIChatBotApp.swift in Sources */,
-				7A92BA212C719B8C0071C47B /* AIService.swift in Sources */,
+				7A92BA252C719B8C0071C47B /* CarPlayManager.swift in Sources */,
 				7A92BA232C719B8C0071C47B /* VoiceManager.swift in Sources */,
-				7A92BA2C2C719B8C0071C47B /* Config.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

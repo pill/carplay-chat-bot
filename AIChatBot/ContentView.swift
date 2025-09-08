@@ -1,4 +1,5 @@
 import SwiftUI
+import CarPlay
 
 struct ContentView: View {
     @StateObject private var aiService = AIService()
@@ -273,6 +274,10 @@ struct ContentView: View {
         }
         .onAppear {
             voiceManager.requestPermissions()
+            
+            // Initialize CarPlay manager
+            setupCarPlay()
+            
             // Start command listening after a delay to allow permissions to be granted
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if voiceManager.hasPermission {
@@ -473,6 +478,13 @@ struct ContentView: View {
         messageText = ""
         Task {
             await aiService.sendMessage(message)
+        }
+    }
+    
+    private func setupCarPlay() {
+        // Initialize CarPlay manager with a check to avoid compilation issues
+        DispatchQueue.main.async {
+            CarPlayManager.shared.setup()
         }
     }
 }
