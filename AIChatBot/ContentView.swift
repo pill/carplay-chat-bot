@@ -273,6 +273,7 @@ struct ContentView: View {
         }
         .onAppear {
             voiceManager.requestPermissions()
+            
             // Start command listening after a delay to allow permissions to be granted
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if voiceManager.hasPermission {
@@ -475,6 +476,7 @@ struct ContentView: View {
             await aiService.sendMessage(message)
         }
     }
+    
 }
 
 struct MessageBubble: View {

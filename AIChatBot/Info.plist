@@ -37,6 +37,15 @@
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
 				</dict>
 			</array>
+			<key>CPTemplateApplicationSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>CarPlay Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>AIChatBot.CarPlaySceneDelegate</string>
+				</dict>
+			</array>
 		</dict>
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
@@ -77,6 +86,16 @@
 		<string>audio</string>
 		<string>background-processing</string>
 	</array>
+	<key>CPSupportedCarPlayCategories</key>
+	<array>
+		<string>communication</string>
+		<string>information</string>
+		<string>productivity</string>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>carplay</string>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -98,6 +117,13 @@
 				<string>TLSv1.2</string>
 			</dict>
 			<key>generativelanguage.googleapis.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+			</dict>
+			<key>api.perplexity.ai</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<false/>

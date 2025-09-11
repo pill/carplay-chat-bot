@@ -2,7 +2,7 @@ import Foundation
 import CarPlay
 import Intents
 
-class CarPlayManager: NSObject {
+class CarPlayManager: NSObject, CPTemplateApplicationSceneDelegate {
     static let shared = CarPlayManager()
     
     var interfaceController: CPInterfaceController?
@@ -14,25 +14,32 @@ class CarPlayManager: NSObject {
     }
     
     func setup() {
-        // Register for CarPlay connection notifications
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(carPlayDidConnect),
-            name: .CPConnectionStatusDidChange,
-            object: nil
-        )
+        print("🚗 CarPlay manager initialized - will be connected via scene delegate")
     }
     
-    @objc private func carPlayDidConnect(_ notification: Notification) {
-        // Handle CarPlay connection status changes
+    // MARK: - CPTemplateApplicationSceneDelegate
+    
+    func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController) {
+        print("🚗 CarPlay connected!")
+        self.interfaceController = interfaceController
+        setupCarPlayInterface()
+    }
+    
+    func templateApplicationScene(_ templateApplicationScene: CPTemplateApplicationScene, didDisconnect interfaceController: CPInterfaceController) {
+        print("🚗 CarPlay disconnected")
+        self.interfaceController = nil
     }
     
     func setupCarPlayInterface() {
-        guard let interfaceController = interfaceController else { return }
+        guard let interfaceController = interfaceController else {
+            print("🚗 No interface controller available")
+            return
+        }
         
+        print("🚗 Setting up CarPlay interface")
         // Create the main template
         let template = createMainTemplate()
-        interfaceController.setRootTemplate(template, animated: true)
+        interfaceController.setRootTemplate(template, animated: true, completion: nil)
     }
     
     private func createMainTemplate() -> CPTemplate {
@@ -41,15 +48,17 @@ class CarPlayManager: NSObject {
             text: "New Chat",
             detailText: "Start a new conversation",
             image: UIImage(systemName: "plus.circle")
-        ) { [weak self] _, completion in
+        )
+        newChatItem.handler = { [weak self] _, completion in
             self?.startNewChat(completion: completion)
         }
         
         let recentChatsItem = CPListItem(
             text: "Recent Chats",
-            detailText: "View recent conversations",
+            detailText: "View recent conversations", 
             image: UIImage(systemName: "clock")
-        ) { [weak self] _, completion in
+        )
+        recentChatsItem.handler = { [weak self] _, completion in
             self?.showRecentChats(completion: completion)
         }
         
@@ -57,7 +66,8 @@ class CarPlayManager: NSObject {
             text: "Voice Chat",
             detailText: "Start voice conversation",
             image: UIImage(systemName: "mic.circle")
-        ) { [weak self] _, completion in
+        )
+        voiceChatItem.handler = { [weak self] _, completion in
             self?.startVoiceChat(completion: completion)
         }
         
@@ -65,7 +75,8 @@ class CarPlayManager: NSObject {
             text: "Settings",
             detailText: "Configure AI service",
             image: UIImage(systemName: "gear")
-        ) { [weak self] _, completion in
+        )
+        settingsItem.handler = { [weak self] _, completion in
             self?.showSettings(completion: completion)
         }
         
@@ -83,20 +94,22 @@ class CarPlayManager: NSObject {
         aiService.startNewChat()
         
         let chatTemplate = createChatTemplate()
-        interfaceController?.pushTemplate(chatTemplate, animated: true)
+        interfaceController?.pushTemplate(chatTemplate, animated: true, completion: nil)
         completion()
     }
     
     private func showRecentChats(completion: @escaping () -> Void) {
         let recentChats = aiService.getRecentChats()
         let items = recentChats.map { chat in
-            CPListItem(
+            let item = CPListItem(
                 text: chat.title,
                 detailText: chat.lastMessage,
                 image: UIImage(systemName: "message")
-            ) { [weak self] _, completion in
+            )
+            item.handler = { [weak self] _, completion in
                 self?.openChat(chat, completion: completion)
             }
+            return item
         }
         
         let template = CPListTemplate(
@@ -104,109 +117,96 @@ class CarPlayManager: NSObject {
             sections: [CPListSection(items: items)]
         )
         
-        interfaceController?.pushTemplate(template, animated: true)
+        interfaceController?.pushTemplate(template, animated: true, completion: nil)
         completion()
     }
     
     private func startVoiceChat(completion: @escaping () -> Void) {
         let voiceTemplate = createVoiceChatTemplate()
-        interfaceController?.pushTemplate(voiceTemplate, animated: true)
+        interfaceController?.pushTemplate(voiceTemplate, animated: true, completion: nil)
         completion()
     }
     
     private func showSettings(completion: @escaping () -> Void) {
-        let settingsItems = [
-            CPListItem(
-                text: "AI Service",
-                detailText: "Configure AI provider",
-                image: UIImage(systemName: "brain")
-            ) { _, completion in
-                // Handle AI service selection
-                completion()
-            },
-            CPListItem(
-                text: "Voice Settings",
-                detailText: "Adjust voice preferences",
-                image: UIImage(systemName: "speaker.wave.2")
-            ) { _, completion in
-                // Handle voice settings
-                completion()
-            }
-        ]
+        let aiServiceItem = CPListItem(
+            text: "AI Service",
+            detailText: "Configure AI provider",
+            image: UIImage(systemName: "brain")
+        )
+        aiServiceItem.handler = { _, completion in
+            // Handle AI service selection
+            completion()
+        }
+        
+        let voiceSettingsItem = CPListItem(
+            text: "Voice Settings",
+            detailText: "Adjust voice preferences",
+            image: UIImage(systemName: "speaker.wave.2")
+        )
+        voiceSettingsItem.handler = { _, completion in
+            // Handle voice settings
+            completion()
+        }
+        
+        let settingsItems = [aiServiceItem, voiceSettingsItem]
         
         let template = CPListTemplate(
             title: "Settings",
             sections: [CPListSection(items: settingsItems)]
         )
         
-        interfaceController?.pushTemplate(template, animated: true)
+        interfaceController?.pushTemplate(template, animated: true, completion: nil)
         completion()
     }
     
     private func createChatTemplate() -> CPTemplate {
-        let inputField = CPTextButton(
-            title: "Tap to speak or type...",
-            textStyle: .normal
-        ) { [weak self] in
+        let newMessageButton = CPGridButton(
+            titleVariants: ["New Message"],
+            image: UIImage(systemName: "plus.circle")!
+        ) { [weak self] (button: CPGridButton) in
             self?.showChatInput()
         }
         
-        let sendButton = CPTextButton(
-            title: "Send",
-            textStyle: .confirm
-        ) { [weak self] in
-            self?.sendChatMessage()
+        let voiceInputButton = CPGridButton(
+            titleVariants: ["Voice Input"],
+            image: UIImage(systemName: "mic.circle")!
+        ) { [weak self] (button: CPGridButton) in
+            self?.startVoiceInput()
+        }
+        
+        let repeatButton = CPGridButton(
+            titleVariants: ["Repeat Last"],
+            image: UIImage(systemName: "arrow.clockwise")!
+        ) { [weak self] (button: CPGridButton) in
+            self?.repeatLastResponse()
         }
         
         let template = CPGridTemplate(
             title: "AI Chat",
-            buttons: [
-                CPGridButton(
-                    titleVariants: ["New Message"],
-                    subtitleVariants: ["Start typing or speaking"],
-                    image: UIImage(systemName: "plus.circle")
-                ) { [weak self] in
-                    self?.showChatInput()
-                },
-                CPGridButton(
-                    titleVariants: ["Voice Input"],
-                    subtitleVariants: ["Use voice commands"],
-                    image: UIImage(systemName: "mic.circle")
-                ) { [weak self] in
-                    self?.startVoiceInput()
-                },
-                CPGridButton(
-                    titleVariants: ["Repeat Last"],
-                    subtitleVariants: ["Hear last response"],
-                    image: UIImage(systemName: "arrow.clockwise")
-                ) { [weak self] in
-                    self?.repeatLastResponse()
-                }
-            ]
+            gridButtons: [newMessageButton, voiceInputButton, repeatButton]
         )
         
         return template
     }
     
     private func createVoiceChatTemplate() -> CPTemplate {
+        let startButton = CPGridButton(
+            titleVariants: ["Start Recording"],
+            image: UIImage(systemName: "mic.circle.fill")!
+        ) { [weak self] (button: CPGridButton) in
+            self?.startVoiceRecording()
+        }
+        
+        let stopButton = CPGridButton(
+            titleVariants: ["Stop Recording"],
+            image: UIImage(systemName: "stop.circle.fill")!
+        ) { [weak self] (button: CPGridButton) in
+            self?.stopVoiceRecording()
+        }
+        
         let template = CPGridTemplate(
             title: "Voice Chat",
-            buttons: [
-                CPGridButton(
-                    titleVariants: ["Start Recording"],
-                    subtitleVariants: ["Begin voice input"],
-                    image: UIImage(systemName: "mic.circle.fill")
-                ) { [weak self] in
-                    self?.startVoiceRecording()
-                },
-                CPGridButton(
-                    titleVariants: ["Stop Recording"],
-                    subtitleVariants: ["End voice input"],
-                    image: UIImage(systemName: "stop.circle.fill")
-                ) { [weak self] in
-                    self?.stopVoiceRecording()
-                }
-            ]
+            gridButtons: [startButton, stopButton]
         )
         
         return template
@@ -214,17 +214,20 @@ class CarPlayManager: NSObject {
     
     private func showChatInput() {
         // Show text input interface
+        let cancelAction = CPAlertAction(title: "Cancel", style: .cancel) { _ in
+            // Just dismiss
+        }
+        
+        let sendAction = CPAlertAction(title: "Send", style: .default) { [weak self] _ in
+            self?.sendChatMessage()
+        }
+        
         let alert = CPAlertTemplate(
             titleVariants: ["New Message"],
-            actions: [
-                CPAlertAction(title: "Cancel", style: .cancel),
-                CPAlertAction(title: "Send", style: .default) { [weak self] in
-                    self?.sendChatMessage()
-                }
-            ]
+            actions: [cancelAction, sendAction]
         )
         
-        interfaceController?.presentTemplate(alert, animated: true)
+        interfaceController?.presentTemplate(alert, animated: true, completion: nil)
     }
     
     private func startVoiceInput() {
