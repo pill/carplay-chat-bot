@@ -14,8 +14,7 @@ class CarPlayManager: NSObject, CPTemplateApplicationSceneDelegate {
     }
     
     func setup() {
-        print("🚗 Setting up CarPlay manager")
-        // CarPlay setup is now handled through scene delegates
+        print("🚗 CarPlay manager initialized - will be connected via scene delegate")
     }
     
     // MARK: - CPTemplateApplicationSceneDelegate

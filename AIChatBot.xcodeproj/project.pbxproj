@@ -20,6 +20,8 @@
 		7A92BA2C2C719B8C0071C47B /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA2B2C719B8C0071C47B /* Config.swift */; };
 		7A92BA252C719B8C0071C47B /* CarPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA262C719B8C0071C47B /* CarPlayManager.swift */; };
 		7A92BA272C719B8C0071C47B /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA282C719B8C0071C47B /* ChatViewController.swift */; };
+		7A92BA292C719B8C0071C47B /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA2A2C719B8C0071C47B /* CarPlaySceneDelegate.swift */; };
+		7A92BA2D2C719B8C0071C47B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A92BA2E2C719B8C0071C47B /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,8 +35,9 @@
 		7A92BA242C719B8C0071C47B /* VoiceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceManager.swift; sourceTree = "<group>"; };
 		7A92BA262C719B8C0071C47B /* CarPlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayManager.swift; sourceTree = "<group>"; };
 		7A92BA282C719B8C0071C47B /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
-		7A92BA2A2C719B8C0071C47B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7A92BA2A2C719B8C0071C47B /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
 		7A92BA2B2C719B8C0071C47B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		7A92BA2E2C719B8C0071C47B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7F0E0A562C719B8A0071C47B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1913BBA2C719B8A0071C47B /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		B40A07112C719B8A0071C47B /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
@@ -71,13 +74,14 @@
 			isa = PBXGroup;
 			children = (
 				7A92BA102C719B8A0071C47B /* AIChatBotApp.swift */,
+				7A92BA2E2C719B8C0071C47B /* AppDelegate.swift */,
 				7A92BA122C719B8A0071C47B /* ContentView.swift */,
 				7A92BA222C719B8C0071C47B /* AIService.swift */,
 				7A92BA242C719B8C0071C47B /* VoiceManager.swift */,
 				7A92BA262C719B8C0071C47B /* CarPlayManager.swift */,
+				7A92BA2A2C719B8C0071C47B /* CarPlaySceneDelegate.swift */,
 				7A92BA282C719B8C0071C47B /* ChatViewController.swift */,
 				7A92BA2B2C719B8C0071C47B /* Config.swift */,
-				7A92BA2A2C719B8C0071C47B /* Info.plist */,
 				7F0E0A562C719B8A0071C47B /* SettingsView.swift */,
 				6DB7ABFF2C719B8A0071C47B /* AIService.swift */,
 				A1913BBA2C719B8A0071C47B /* Config.swift */,
@@ -172,7 +176,9 @@
 				199ECFA62C719B8A0071C47B /* KeychainManager.swift in Sources */,
 				65C90A372C719B8A0071C47B /* Config.swift in Sources */,
 				7A92BA112C719B8A0071C47B /* AIChatBotApp.swift in Sources */,
+				7A92BA2D2C719B8C0071C47B /* AppDelegate.swift in Sources */,
 				7A92BA252C719B8C0071C47B /* CarPlayManager.swift in Sources */,
+				7A92BA292C719B8C0071C47B /* CarPlaySceneDelegate.swift in Sources */,
 				7A92BA232C719B8C0071C47B /* VoiceManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
